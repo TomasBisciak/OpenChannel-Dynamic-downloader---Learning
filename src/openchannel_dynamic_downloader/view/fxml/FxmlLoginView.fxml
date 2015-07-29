@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="395.0" prefWidth="614.0" style="-fx-background-color: #ecf0f1;" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="openchannel_dynamic_downloader.controllers.FxmlLoginViewController">
+   <bottom>
+      <ImageView fitHeight="195.0" fitWidth="427.0" opacity="0.67" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER">
+         <image>
+            <Image url="@../../resources/images/openChanTrans.png" />
+         </image>
+      </ImageView>
+   </bottom>
+   <center>
+      <VBox alignment="CENTER" spacing="5.0" BorderPane.alignment="CENTER">
+         <children>
+            <TextField fx:id="loginUsernameField" prefColumnCount="20" prefHeight="25.0" prefWidth="337.0" promptText="Username" />
+            <PasswordField fx:id="loginPasswordField" promptText="Password" />
+            <HBox alignment="CENTER">
+               <VBox.margin>
+                  <Insets bottom="10.0" />
+               </VBox.margin>
+               <children>
+                  <Button fx:id="loginBtn" contentDisplay="CENTER" mnemonicParsing="false" text="Login" />
+                  <Label fx:id="lblLogin" />
+               </children>
+            </HBox>
+            <TextField fx:id="createUsernameField" layoutX="10.0" layoutY="35.0" prefColumnCount="20" prefHeight="25.0" prefWidth="337.0" promptText="Username" />
+            <TextField fx:id="createEmailField" layoutX="10.0" layoutY="115.0" prefColumnCount="20" prefHeight="25.0" prefWidth="337.0" promptText="Email  (Optional)" />
+            <PasswordField fx:id="createPasswordField" layoutX="10.0" layoutY="70.0" promptText="Password" />
+            <HBox alignment="CENTER">
+               <children>
+                  <Button fx:id="createBtn" contentDisplay="CENTER" mnemonicParsing="false" text="Create user" />
+                  <Label fx:id="lblCreate" />
+               </children>
+            </HBox>
+         </children>
+         <BorderPane.margin>
+            <Insets left="150.0" right="150.0" />
+         </BorderPane.margin>
+      </VBox>
+   </center>
+   <top>
+      <VBox BorderPane.alignment="CENTER">
+         <BorderPane.margin>
+            <Insets bottom="30.0" top="30.0" />
+         </BorderPane.margin>
+         <children>
+            <Label text="Please login or create new user">
+               <font>
+                  <Font size="17.0" />
+               </font>
+               <VBox.margin>
+                  <Insets left="50.0" />
+               </VBox.margin>
+            </Label>
+            <Label text="If you are lazy , use default account with no credentials" textFill="#8e44ad">
+               <VBox.margin>
+                  <Insets left="50.0" />
+               </VBox.margin>
+               <font>
+                  <Font size="13.0" />
+               </font>
+            </Label>
+         </children>
+      </VBox>
+   </top>
+</BorderPane>

@@ -213,9 +213,7 @@
          <bottom>
             <FlowPane fx:id="informativePane" alignment="CENTER_RIGHT" prefHeight="26.0" prefWidth="751.0" style="-fx-background-color: linear-gradient(#F0F0F0, #D4D4D4);">
                <children>
-                  <RadioButton mnemonicParsing="false" mouseTransparent="true" selected="true" style="-fx-mark-color: green;" text="connection  " />
-                  <RadioButton layoutX="1035.0" layoutY="15.0" mnemonicParsing="false" mouseTransparent="true" selected="true" style="-fx-mark-color: green;" text="disk space " />
-                  <RadioButton layoutX="1046.0" layoutY="15.0" mnemonicParsing="false" mouseTransparent="true" selected="true" style="-fx-mark-color: green;" text="security " />
+                  <RadioButton fx:id="rbtnDiskSpace" layoutX="1035.0" layoutY="15.0" mnemonicParsing="false" mouseTransparent="true" selected="true" style="-fx-mark-color: green;" text="disk space: Total: Usable:" />
                </children>
             </FlowPane>
          </bottom>

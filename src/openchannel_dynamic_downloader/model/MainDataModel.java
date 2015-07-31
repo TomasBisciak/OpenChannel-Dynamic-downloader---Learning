@@ -14,7 +14,7 @@ import openchannel_dynamic_downloader.security.UserProfile;
 public class MainDataModel {
     
     
-   private UserProfile loginProfile;
+   public static UserProfile loginProfile;//profile that user is logged in as.
     
     
     private MainDataModel(){

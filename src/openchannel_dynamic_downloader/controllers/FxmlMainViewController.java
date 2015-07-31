@@ -13,6 +13,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
@@ -47,6 +48,9 @@ public class FxmlMainViewController implements Initializable {
     private ToggleButton schedulerMenuBtn;
     @FXML
     private ToggleButton activateMenuBtn;
+    
+    @FXML
+    public static RadioButton rbtnDiskSpace;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -119,12 +123,21 @@ public class FxmlMainViewController implements Initializable {
             activateMenuBtn.setStyle("-fx-background-radius:0;-fx-background-color:#1abc9c;");
             activateMenuBtn.setText("Activated");
             activateMenuBtn.setTextFill(Paint.valueOf("white"));
+            
+            
         } else {
             activateMenuBtn.setStyle("-fx-background-radius:0;");
             activateMenuBtn.setText("Activate");
             activateMenuBtn.setTextFill(Paint.valueOf("black"));
+            
+            
 
         }
     }
+    
+    
+    
+    
+    
 
 }

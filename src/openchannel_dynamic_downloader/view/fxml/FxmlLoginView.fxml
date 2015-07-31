@@ -20,22 +20,23 @@
          <children>
             <TextField fx:id="loginUsernameField" prefColumnCount="20" prefHeight="25.0" prefWidth="337.0" promptText="Username" />
             <PasswordField fx:id="loginPasswordField" promptText="Password" />
-            <HBox alignment="CENTER">
+            <HBox alignment="CENTER" spacing="5.0">
                <VBox.margin>
                   <Insets bottom="10.0" />
                </VBox.margin>
                <children>
+                  <CheckBox mnemonicParsing="false" text="Auto login" />
                   <Button fx:id="loginBtn" contentDisplay="CENTER" mnemonicParsing="false" text="Login" />
-                  <Label fx:id="lblLogin" />
+                  <Label fx:id="lblLogin" textFill="WHITE" />
                </children>
             </HBox>
             <TextField fx:id="createUsernameField" layoutX="10.0" layoutY="35.0" prefColumnCount="20" prefHeight="25.0" prefWidth="337.0" promptText="Username" />
             <TextField fx:id="createEmailField" layoutX="10.0" layoutY="115.0" prefColumnCount="20" prefHeight="25.0" prefWidth="337.0" promptText="Email  (Optional)" />
             <PasswordField fx:id="createPasswordField" layoutX="10.0" layoutY="70.0" promptText="Password" />
-            <HBox alignment="CENTER">
+            <HBox alignment="CENTER" spacing="5.0">
                <children>
                   <Button fx:id="createBtn" contentDisplay="CENTER" mnemonicParsing="false" text="Create user" />
-                  <Label fx:id="lblCreate" />
+                  <Label fx:id="lblCreate" textFill="WHITE" />
                </children>
             </HBox>
          </children>

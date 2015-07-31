@@ -30,8 +30,8 @@ public class H2DatabaseConfigurator {
     private static H2DatabaseConfigurator instance=new H2DatabaseConfigurator();
     
     private H2DatabaseConfigurator(){
-        setPassword(password);
-        setUsername(username);
+       // setPassword(password);
+        //setUsername(username);
         setType(type);
     }
     

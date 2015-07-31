@@ -7,29 +7,31 @@ package openchannel_dynamic_downloader.main;
 
 import java.awt.SystemTray;
 import java.awt.TrayIcon;
+import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.nio.file.FileStore;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.PasswordField;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import openchannel_dynamic_downloader.controllers.FxmlMainViewController;
 import openchannel_dynamic_downloader.controls.Notifier;
 import openchannel_dynamic_downloader.controls.Notifier.NotifierType;
+import openchannel_dynamic_downloader.model.MainDataModel;
 import openchannel_dynamic_downloader.security.UserProfile;
 import openchannel_dynamic_downloader.tray.Tray;
 import openchannel_dynamic_downloader.utils.Info;
@@ -41,14 +43,25 @@ import openchannel_dynamic_downloader.utils.Info;
 public class OpenChannel_Dynamic_Downloader extends Application {
 
     private static ServerSocket socket;
+
+    public static OpenChannel_Dynamic_Downloader odca;
+
     public static Stage primStage;
     private static int appPort;
     private static Tray tray;
     private static boolean isTray;
-    private boolean running;
+    private static boolean running;
 
     //NOT SURE IF NEEDED / MAYBE WILL BE BETTER TO SET CONTROLLER ON FXML
     public static final FxmlMainViewController fxmlMvc = new FxmlMainViewController();
+    
+    
+    
+    private static Path[] rootDirs;
+    
+    static{
+        
+    }
 
     /**
      * This method shoud run only once IF system tray is not supported on this machine ELSE multiple invocations might be executed
@@ -58,25 +71,44 @@ public class OpenChannel_Dynamic_Downloader extends Application {
      */
     @Override
     public void start(Stage stage) throws Exception {
-        primStage = stage;
-        primStage.setTitle("OpenChannel " + Info.APP_VERSION);
-        primStage.getIcons().add(new Image(OpenChannel_Dynamic_Downloader.class.getResourceAsStream(Info.Resource.OCPI)));
-        primStage.setMaximized(true);
-        primStage.setScene(new Scene(loadMainPane()));
 
-        primStage.show();
+        if (MainDataModel.loginProfile != null) {//logged in
 
-        if (SystemTray.isSupported()) {
-            primStage.setOnCloseRequest((WindowEvent event) -> {
-                tray.showMessage("Application still active.", TrayIcon.MessageType.INFO);
+            if (MainDataModel.loginProfile.getPassword().equals("") && MainDataModel.loginProfile.getUsername().equals("")) {
+                Platform.runLater(() -> {
+                    Notifier.showNotification(Notifier.NotifierType.INFORMATION, "Logged in",
+                            "Logged in using default profile.", Pos.BOTTOM_RIGHT, null);
+                });
 
-            });
-
-            if (!isTray) {
-                tray = new Tray(primStage, this, Info.Resource.OCPI);
-                isTray = true;
+            } else {
+                Platform.runLater(() -> {
+                    Notifier.showNotification(Notifier.NotifierType.INFORMATION, "Logged in",
+                            "Logged as " + MainDataModel.loginProfile.getUsername() + ".", Pos.BOTTOM_RIGHT, null);
+                });
             }
 
+            primStage = stage;
+            primStage.setTitle("OpenChannel " + Info.APP_VERSION);
+            primStage.getIcons().add(new Image(OpenChannel_Dynamic_Downloader.class.getResourceAsStream(Info.Resource.OCPI)));
+            primStage.setMaximized(true);
+            primStage.setScene(new Scene(loadMainPane()));
+
+            primStage.show();
+
+            if (SystemTray.isSupported()) {
+                primStage.setOnCloseRequest((WindowEvent event) -> {
+                    tray.showMessage("Application still active.", TrayIcon.MessageType.INFO);
+
+                });
+
+                if (!isTray) {
+                    tray = new Tray(primStage, this, Info.Resource.OCPI);
+                    isTray = true;
+                }
+
+            }
+        } else {//not yet logged in
+            showLoginWindow();
         }
 
         if (running) {
@@ -85,6 +117,8 @@ public class OpenChannel_Dynamic_Downloader extends Application {
         }
     }
 
+    
+    
     /**
      * TODO doc
      */
@@ -98,6 +132,25 @@ public class OpenChannel_Dynamic_Downloader extends Application {
             });
             // PlaySound.playSound(PlaySound.SOUND_DOWNLOAD_FINISHED);//test
         } else {
+
+            Thread diskSpaceChecker = new Thread(new Runnable() {
+
+                @Override
+                public void run() {
+                    while (true) {
+                        
+                        try {
+                            Thread.sleep(10000);
+                        } catch (InterruptedException ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+
+                }
+            });
+            diskSpaceChecker.setName("Disk space checker");
+            diskSpaceChecker.setPriority(Thread.MIN_PRIORITY);
+
             //BFXviewLoader.loadView("/bitcompile/ecps/fxml/FxmlBrowseProfiles.fxml");//change to default page at loading time  
             //PlaySound.play(PlaySound.WELCOME_BACK);
         }
@@ -123,23 +176,29 @@ public class OpenChannel_Dynamic_Downloader extends Application {
     /**
      * @param args the command line arguments
      */
+    @SuppressWarnings("static-access")
     public static void main(String[] args) {
         //argument processing might be reworked
 
         processArguments(args);
-
-        launch(args);
+        //need to use application as object cause of login invocation of start
+        odca = new OpenChannel_Dynamic_Downloader();
+        odca.launch(args);
+        //launch(args);
 
         //not sure if start is on fx or main thread
     }
 
     public static final void showLoginWindow() {
-
-        Stage stage = new Stage();
-        stage.setTitle("OpenChannel login");
-        stage.getIcons().add(new Image(OpenChannel_Dynamic_Downloader.class.getResourceAsStream(Info.Resource.OCPI)));
-
-        stage.setScene(new Scene(parent));
+        primStage = new Stage();
+        primStage.setTitle("OpenChannel login");
+        primStage.getIcons().add(new Image(OpenChannel_Dynamic_Downloader.class.getResourceAsStream(Info.Resource.OCPI)));
+        try {
+            primStage.setScene(new Scene((BorderPane) FXMLLoader.load(OpenChannel_Dynamic_Downloader.class.getResource(Info.Resource.FXML_FILE_LOGIN))));
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        primStage.show();
 
     }
 

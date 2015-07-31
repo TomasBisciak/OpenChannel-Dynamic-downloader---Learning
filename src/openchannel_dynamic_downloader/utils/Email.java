@@ -13,7 +13,7 @@ public class Email {
     
     
     
-    public static final boolean validateEmailAdress(){
+    public static final boolean validateEmailAdress(String email){
         
         return true;
     }

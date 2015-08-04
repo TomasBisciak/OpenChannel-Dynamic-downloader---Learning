@@ -12,7 +12,7 @@ import javafx.scene.Node;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import openchannel_dynamic_downloader.main.OpenChannel_Dynamic_Downloader;
+import openchannel_dynamic_downloader.application.OpenChannel_Dynamic_Downloader;
 import org.controlsfx.control.Notifications;
 
 /**
@@ -30,7 +30,7 @@ public final class Notifier {
     private Notifier() {
     }
 
-    ;
+    
     
     public static void showNotification(NotifierType notifierType, String title, String text, Pos position, EventHandler<ActionEvent> eh, String... imgUrl) {
         Node graphic = null;

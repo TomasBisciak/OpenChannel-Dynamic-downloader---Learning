@@ -20,10 +20,12 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
+import javafx.stage.Stage;
 import openchannel_dynamic_downloader.controls.Notifier;
-import openchannel_dynamic_downloader.main.OpenChannel_Dynamic_Downloader;
+import openchannel_dynamic_downloader.application.OpenChannel_Dynamic_Downloader;
 import openchannel_dynamic_downloader.security.UserProfile;
 import openchannel_dynamic_downloader.utils.Email;
+import openchannel_dynamic_downloader.utils.Info;
 
 /**
  *
@@ -60,24 +62,44 @@ public class FxmlLoginViewController implements Initializable {
 
     private boolean emailValidity = false;
 
-    @SuppressWarnings("static-access")
     private void hookListeners() {
 
+        //EVERYTHING HERE ON FX APPLICATION THREAD / MIGH TBE MOVED OFF OF IT for performance gain//fixed
         loginBtn.setOnMouseClicked((MouseEvent event) -> {
-            UserProfile logProfile = new UserProfile(loginUsernameField.getText(), loginPasswordField.getText());
-            if (logProfile.validate()) {
-                logProfile.login();
-                OpenChannel_Dynamic_Downloader.primStage.hide();
-                try {//invoke start method and lats do it again
-                    OpenChannel_Dynamic_Downloader.odca.start(OpenChannel_Dynamic_Downloader.primStage);
-                    
-                } catch (Exception ex) {
-                    ex.printStackTrace();
+            new Thread(() -> {
+                UserProfile logProfile;
+                if (loginUsernameField.getText().equals("") && loginPasswordField.getText().equals("")) {
+                    logProfile = new UserProfile();
+                } else {
+                    logProfile = new UserProfile(loginUsernameField.getText(), loginPasswordField.getText());
                 }
-
-            } else {
-                lblLogin.setText("incorrect credentials");
-            }
+                
+                if (logProfile.validate()) {
+                    logProfile.login();
+                    
+                    //hide login screen
+                    Platform.runLater(() -> {
+                        OpenChannel_Dynamic_Downloader.primStage.hide();
+                    });
+                    
+                    try {//invoke start method and lats do it again
+                        //logged in , check preferences
+                        if (logProfile.getPreferences().getBoolean(Info.PreferenceData.PREF_USER_FIRST_TIME_RUN, true)) {
+                            OpenChannel_Dynamic_Downloader.showEulaWindow();
+                        } else {
+                            OpenChannel_Dynamic_Downloader.showMainView();
+                        }
+                        
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                    
+                } else {
+                    Platform.runLater(() -> {
+                        lblLogin.setText("incorrect credentials");
+                    });
+                }
+            }).start();
 
         });
 

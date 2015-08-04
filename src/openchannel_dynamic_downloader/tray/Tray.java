@@ -18,6 +18,7 @@ import javafx.application.Platform;
 
 import javafx.stage.Stage;
 import javax.imageio.ImageIO;
+import openchannel_dynamic_downloader.application.OpenChannel_Dynamic_Downloader;
 import openchannel_dynamic_downloader.utils.Info;
 import org.jnativehook.GlobalScreen;
 import org.jnativehook.NativeHookException;
@@ -29,14 +30,12 @@ import org.jnativehook.NativeHookException;
 public class Tray {
     
     private Stage stage;
-    private Application application;
     private TrayIcon icon;
 
     
-    public Tray(Stage stage, Application application,String imagePath) {
+    public Tray(Stage stage,String imagePath) {
         
        this.stage = stage;
-       this.application = application;
         hookTray(imagePath);
     }
 
@@ -84,7 +83,7 @@ public class Tray {
         showWindow.addActionListener((ActionEvent e) -> {
             Platform.runLater(() -> {
                 try {
-                    application.start(stage);
+                    OpenChannel_Dynamic_Downloader.showMainView();
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }

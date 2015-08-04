@@ -8,6 +8,7 @@ package openchannel_dynamic_downloader.controls;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Label;
@@ -31,6 +32,7 @@ public class OCTableView extends TableView {
     private List<TableColumn> tcmns = new ArrayList<>();
     private List<Integer> multipleSelection = new ArrayList<>();
     private DownloadUnit currentSelect;
+    
 
     TableColumn idColumn = new TableColumn("ID");
     TableColumn nameColumn = new TableColumn("Name");
@@ -75,7 +77,12 @@ public class OCTableView extends TableView {
         this.setTableMenuButtonVisible(true);
 
         //test
-        this.getItems().add(new DownloadUnit());
+        for(int i =0;i<10;i++){
+            DownloadUnit unit=new DownloadUnit();
+            
+             this.getItems().add(unit);
+        }
+       
 
         loadFilter(viewFilter);//not sure if it wil be like this we wil lsee
 
@@ -129,11 +136,12 @@ public class OCTableView extends TableView {
         public ProgressTableCell() {
             pane = new StackPane();
             label = new Label("TESTING");
-            progressBar = new ProgressBar(100);//TODO TEST
+            progressBar = new ProgressBar(0.2);//TODO TEST
             progressBar.setStyle("-fx-accent:#3498db");
             pane.getChildren().add(0, progressBar);
             pane.getChildren().add(1, label);
             setGraphic(pane);
+           
         }
 
         @Override
@@ -174,6 +182,7 @@ public class OCTableView extends TableView {
                     progressBar.setStyle("-fx-accent:#95a5a6");
                     label.setText("Paused");
                 }
+                
             }
         }
 

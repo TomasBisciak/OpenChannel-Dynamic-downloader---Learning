@@ -5,6 +5,7 @@
  */
 package openchannel_dynamic_downloader.downloader;
 
+
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 
@@ -37,14 +38,14 @@ public class DownloadUnit {
         this.name = new SimpleStringProperty("test");
         this.size = new SimpleStringProperty("test");
         this.source = new SimpleStringProperty("test");
-        this.progress = new SimpleDoubleProperty(100);
-        this.downloadSpeed = new SimpleDoubleProperty(100);
+        this.progress = new SimpleDoubleProperty(0);
+        this.downloadSpeed = new SimpleDoubleProperty(0);
         this.eta = new SimpleStringProperty("test");
         this.added = new SimpleStringProperty("test");
         this.completedOn = new SimpleStringProperty("test");
     }
 
-    ;//just for testing everything null;
+    //just for testing everything null;
     
     public DownloadUnit(String name, String size, String source) {
 

@@ -25,7 +25,6 @@
                   <Insets bottom="10.0" />
                </VBox.margin>
                <children>
-                  <CheckBox mnemonicParsing="false" text="Auto login" />
                   <Button fx:id="loginBtn" contentDisplay="CENTER" mnemonicParsing="false" text="Login" />
                   <Label fx:id="lblLogin" textFill="WHITE" />
                </children>

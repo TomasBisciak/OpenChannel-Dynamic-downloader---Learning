@@ -26,9 +26,11 @@ public class FileUtils {
 
         for (Path root : FileSystems.getDefault().getRootDirectories()) {
             try {
+                System.out.println(root);
                 FileStore store = Files.getFileStore(root);
+                System.out.println("All disk space "+store.getTotalSpace());
                 diskSpace += store.getTotalSpace();
-            } catch (IOException ex) {
+            } catch (Exception  ex) {
                 ex.printStackTrace();
             }
         }
@@ -43,7 +45,7 @@ public class FileUtils {
             try {
                 FileStore store = Files.getFileStore(root);
                 diskSpace += store.getUsableSpace();
-            } catch (IOException ex) {
+            } catch (Exception ex) {
                 ex.printStackTrace();
             }
         }

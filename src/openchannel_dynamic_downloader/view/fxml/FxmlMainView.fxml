@@ -10,7 +10,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="844.0" prefWidth="1114.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1">
+<ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="871.0" prefWidth="1114.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1">
    <content>
       <BorderPane prefHeight="286.0" prefWidth="382.0" style="-fx-background-color: #090a0c,        linear-gradient(#38424b 0%, #1f2429 20%, #191d22 100%),        linear-gradient(#20262b, #191d22),        radial-gradient(center 50% 0%, radius 100%, rgba(114,131,148,0.9), rgba(255,255,255,0));">
          <top>
@@ -44,7 +44,7 @@
                      <content>
                         <BorderPane prefHeight="577.0" prefWidth="203.0" style="-fx-background-color: 0; -fx-border-width: 0;" BorderPane.alignment="CENTER">
                            <top>
-                              <VBox minHeight="-Infinity" prefHeight="516.0" prefWidth="193.0" spacing="2.0" style="-fx-background-color: linear-gradient(to right, #f7f7f7 0%,#e5e5e5 100%);;">
+                              <VBox minHeight="-Infinity" prefHeight="568.0" prefWidth="193.0" spacing="2.0" style="-fx-background-color: linear-gradient(to right, #f7f7f7 0%,#e5e5e5 100%);;">
                                  <children>
                                     <Label layoutX="10.0" layoutY="37.0" text="Preferences/Settings">
                                        <opaqueInsets>
@@ -100,8 +100,8 @@
                                           <Font name="System Italic" size="12.0" />
                                        </font>
                                     </Label>
-                                    <ToggleButton fx:id="myFilesToggleBtn" focusTraversable="false" mnemonicParsing="false" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0;" text="My Files" />
-                                    <ToggleButton focusTraversable="false" mnemonicParsing="false" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0;" text="Secure files/documents" />
+                                    <ToggleButton fx:id="myFilesToggleBtn" focusTraversable="false" mnemonicParsing="false" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0;" text="Automated download" />
+                                    <ToggleButton focusTraversable="false" mnemonicParsing="false" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0;" text="REGEX Creator" />
                                     <Label text="Database">
                                        <opaqueInsets>
                                           <Insets />
@@ -113,8 +113,8 @@
                                           <Font name="System Italic" size="12.0" />
                                        </font>
                                     </Label>
-                                    <ToggleButton fx:id="databaseToggleButton" focusTraversable="false" mnemonicParsing="false" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0;" text="H2 Database access" />
-                                    <Label layoutX="10.0" layoutY="312.0" text="Premium" textFill="#8e44ad">
+                                    <ToggleButton fx:id="databaseToggleButton" focusTraversable="false" mnemonicParsing="false" onAction="#setViewDatabase" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0;" text="H2 Database access" />
+                                    <Label layoutX="10.0" layoutY="431.0" textFill="#8e44ad">
                                        <opaqueInsets>
                                           <Insets />
                                        </opaqueInsets>
@@ -126,14 +126,15 @@
                                        </font>
                                     </Label>
                                     <ToggleButton fx:id="databaseToggleButton1" focusTraversable="false" layoutX="10.0" layoutY="331.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0; -fx-background-color: #8e44ad;" text="Go premium" textFill="WHITE" />
-                                    <ToggleButton fx:id="databaseToggleButton11" focusTraversable="false" layoutX="10.0" layoutY="450.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0; -fx-background-color: #2980b9;" text="Tutorial" textFill="WHITE" />
+                                    <ToggleButton fx:id="databaseToggleButton11" focusTraversable="false" layoutX="10.0" layoutY="450.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0; -fx-background-color: #e67e22;" text="Tutorial" textFill="WHITE" />
+                                    <ToggleButton fx:id="databaseToggleButton3" focusTraversable="false" layoutX="10.0" layoutY="404.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0; -fx-background-color: #2980b9;" text="Cloud sync" textFill="WHITE" />
                                  </children>
                               </VBox>
                            </top>
                            <center>
                               <BorderPane prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: #090a0c,        linear-gradient(#38424b 0%, #1f2429 20%, #191d22 100%),        linear-gradient(#20262b, #191d22),        radial-gradient(center 50% 0%, radius 100%, rgba(114,131,148,0.9), rgba(255,255,255,0));" BorderPane.alignment="CENTER">
                                  <top>
-                                    <VBox alignment="CENTER" prefHeight="222.0" prefWidth="207.0" BorderPane.alignment="CENTER">
+                                    <VBox alignment="CENTER" prefHeight="181.0" prefWidth="207.0" BorderPane.alignment="CENTER">
                                        <children>
                                           <Label text="Advertisement place" textFill="WHITE">
                                              <VBox.margin>
@@ -159,12 +160,16 @@
                <top>
                   <BorderPane BorderPane.alignment="CENTER">
                      <top>
-                        <TitledPane fx:id="dinDesc" animated="false" collapsible="false" expanded="false" mouseTransparent="true" prefHeight="19.0" prefWidth="903.0" text="Main View" BorderPane.alignment="CENTER" />
+                        <TitledPane animated="false" collapsible="false" prefHeight="0.0" prefWidth="903.0" text="MainView" BorderPane.alignment="CENTER">
+                           <content>
+                              <VBox fx:id="notifPaneHolder" alignment="TOP_CENTER" prefHeight="97.0" prefWidth="901.0" />
+                           </content>
+                        </TitledPane>
                      </top>
                   </BorderPane>
                </top>
                <center>
-                  <SplitPane dividerPositions="0.5" orientation="VERTICAL" prefHeight="200.0" prefWidth="160.0" BorderPane.alignment="CENTER">
+                  <SplitPane dividerPositions="0.6458923512747875" orientation="VERTICAL" prefHeight="200.0" prefWidth="160.0" BorderPane.alignment="CENTER">
                      <items>
                         <ScrollPane fx:id="dynamicNode" fitToHeight="true" fitToWidth="true">
                            <content>
@@ -211,9 +216,9 @@
             </BorderPane>
          </center>
          <bottom>
-            <FlowPane fx:id="informativePane" alignment="CENTER_RIGHT" prefHeight="26.0" prefWidth="751.0" style="-fx-background-color: linear-gradient(#F0F0F0, #D4D4D4);">
+            <FlowPane fx:id="flowPaneSouth" alignment="CENTER_RIGHT" prefHeight="26.0" prefWidth="1112.0" style="-fx-background-color: linear-gradient(#F0F0F0, #D4D4D4);">
                <children>
-                  <RadioButton fx:id="rbtnDiskSpace" layoutX="1035.0" layoutY="15.0" mnemonicParsing="false" mouseTransparent="true" selected="true" style="-fx-mark-color: green;" text="disk space: Total: Usable:" />
+                  <RadioButton fx:id="rbtnDiskSpace" layoutX="1035.0" layoutY="15.0" mnemonicParsing="false" mouseTransparent="true" selected="true" style="-fx-mark-color: green;" text="disk space: Total: Usable:" visible="false" />
                </children>
             </FlowPane>
          </bottom>

@@ -28,57 +28,53 @@ import org.jnativehook.NativeHookException;
  * @author tomas
  */
 public class Tray {
-    
+
     private Stage stage;
     private TrayIcon icon;
 
-    
-    public Tray(Stage stage,String imagePath) {
-        
-       this.stage = stage;
+    public Tray(Stage stage, String imagePath) {
+
+        this.stage = stage;
         hookTray(imagePath);
     }
 
-    public void showMessage(String message,TrayIcon.MessageType TYPE){
+    public void showMessage(String message, TrayIcon.MessageType TYPE) {
         icon.displayMessage("OpenChannel", message, TYPE);
     }
-       
-       private void hookTray(String image) {
-   
-            try {
-                icon = new TrayIcon(ImageIO.read(getClass().getResourceAsStream(image)), "OpenChannel "+Info.APP_VERSION,
-                        createPopupMenu());
-        
-                icon.addActionListener((ActionEvent e) -> {
-                    Platform.runLater(() -> {
-                        stage.setIconified(false);
-                    });
-                  
+
+    private void hookTray(String image) {
+
+        try {
+            icon = new TrayIcon(ImageIO.read(getClass().getResourceAsStream(image)), "OpenChannel " + Info.APP_VERSION,
+                    createPopupMenu());
+
+            
+            
+            icon.addActionListener((ActionEvent e) -> {
+                Platform.runLater(() -> {
+                    stage.setIconified(false);//nevim co presne naco som t osem dal
                 });
-                SystemTray.getSystemTray().add(icon);
-                
-                icon.displayMessage("OpenChannel", "Listener enabled.",
-                        TrayIcon.MessageType.INFO);
-                
-               Platform.setImplicitExit(false);
-               
-            } catch (AWTException | IOException ex) {
-                ex.printStackTrace();
-            }
-            
-            
-        
+
+            });
+            //icon.
+            SystemTray.getSystemTray().add(icon);
+
+            //icon.displayMessage("OpenChannel", "Listener enabled.",
+             //       TrayIcon.MessageType.INFO);
+
+            Platform.setImplicitExit(false);
+
+        } catch (AWTException | IOException ex) {
+            ex.printStackTrace();
+        }
+
     }
-     
-       
-       
-       
-       public PopupMenu createPopupMenu() throws HeadlessException {
+
+    public PopupMenu createPopupMenu() throws HeadlessException {
         PopupMenu menu = new PopupMenu();
 
         MenuItem exit = new MenuItem("Exit");
         MenuItem showWindow = new MenuItem("Show window");
-        
 
         showWindow.addActionListener((ActionEvent e) -> {
             Platform.runLater(() -> {
@@ -90,8 +86,7 @@ public class Tray {
             });
 
         });
-        
-        
+
         exit.addActionListener((ActionEvent e) -> {
             try {
                 GlobalScreen.unregisterNativeHook();
@@ -100,23 +95,19 @@ public class Tray {
                 ex.printStackTrace();
             }
         });
-        
-        
+
         menu.add(showWindow);
         menu.add(exit);
 
         return menu;
     }
-       
-       
-       public void setTrayImage(String imagePath){
+
+    public void setTrayImage(String imagePath) {
         try {
             icon.setImage(ImageIO.read(getClass().getResourceAsStream(imagePath)));
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-       }
-       
-       
-    
+    }
+
 }

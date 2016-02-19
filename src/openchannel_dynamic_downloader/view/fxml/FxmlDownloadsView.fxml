@@ -15,14 +15,14 @@
    <top>
       <HBox prefHeight="10.0" prefWidth="977.0" BorderPane.alignment="CENTER">
          <children>
-            <ToolBar prefHeight="34.0" prefWidth="649.0" HBox.hgrow="ALWAYS">
+            <ToolBar fx:id="toolBarLeft" prefHeight="35.0" prefWidth="540.0" HBox.hgrow="ALWAYS">
               <items>
-                <Button mnemonicParsing="false" style="-fx-background-color: #3498db; -fx-background-radius: 30;" text="ll" textFill="WHITE">
+                <Button fx:id="btnPause" mnemonicParsing="false" onAction="#pauseItemOnEventBtn" style="-fx-background-color: #3498db; -fx-background-radius: 4 4 4 4;" text="ll" textFill="WHITE">
                      <font>
                         <Font name="Arial Black" size="12.0" />
                      </font></Button>
                   <Separator orientation="VERTICAL" prefHeight="20.0" />
-                  <Button layoutX="10.0" layoutY="10.0" mnemonicParsing="false" style="-fx-background-color: #3498db; -fx-background-radius: 20;" text="Pause all" textFill="WHITE">
+                  <Button fx:id="btnPauseAll" layoutX="10.0" layoutY="10.0" mnemonicParsing="false" onAction="#pauseItemsOnEventBtn" style="-fx-background-color: #3498db; -fx-background-radius: 4 4 4 4;" text="Pause all" textFill="WHITE">
                      <font>
                         <Font name="System Bold" size="12.0" />
                      </font>
@@ -39,18 +39,34 @@
                   </ImageView>
               </items>
             </ToolBar>
-            <ToolBar prefHeight="35.0" prefWidth="368.0">
+            <ToolBar prefHeight="35.0" prefWidth="660.0" stylesheets="@../../css/style.css">
               <items>
+                  <Label />
                   <ImageView fitHeight="25.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true">
                      <image>
                         <Image url="@../../resources/images/queue.png" />
                      </image>
                   </ImageView>
+                  <Spinner disable="true" editable="true" prefHeight="25.0" prefWidth="63.0" />
                   <Separator orientation="VERTICAL" prefHeight="20.0" />
-                  <Button fx:id="removeBtn" mnemonicParsing="false" style="-fx-background-radius: 0;" text="Remove" />
-                  <Button fx:id="removeAllBtn" mnemonicParsing="false" style="-fx-background-radius: 0;" text="Remove all" />
+                  <ToolBar prefHeight="20.0" prefWidth="257.0" styleClass="testt" stylesheets="@../../css/style.css">
+                     <items>
+                        <Button fx:id="removeBtn" mnemonicParsing="false" onAction="#removeItemsOnEventBtn" prefWidth="62.0" style="-fx-background-radius: 4 4 4 4; -fx-background-color: #3498db;" text="Remove" textFill="WHITE">
+                           <font>
+                              <Font name="System Bold" size="12.0" />
+                           </font></Button>
+                        <Button fx:id="removeAllBtn" mnemonicParsing="false" onAction="#removeAllOnEvent" style="-fx-background-radius: 4 4 4 4; -fx-background-color: #3498db;" text="Remove all" textFill="WHITE">
+                           <font>
+                              <Font name="System Bold" size="12.0" />
+                           </font></Button>
+                        <Button fx:id="reDownloadBtn" mnemonicParsing="false" onAction="#redownloadItemsOnEvent" style="-fx-background-radius: 4 4 4 4; -fx-background-color: #3498db;" text="Re-download" textFill="WHITE">
+                           <font>
+                              <Font name="System Bold" size="12.0" />
+                           </font></Button>
+                     </items>
+                  </ToolBar>
                   <Separator orientation="VERTICAL" prefHeight="20.0" />
-                <Button mnemonicParsing="false" mouseTransparent="true" style="-fx-background-radius: 20; -fx-background-color: #3498db;" text="Download 548kB/s" textFill="WHITE">
+                <Button fx:id="btnDownloadSpeed" mnemonicParsing="false" mouseTransparent="true" style="-fx-background-radius: 4 4 4 4; -fx-background-color: #3498db;" text="Download 548kB/s" textFill="WHITE">
                      <font>
                         <Font name="System Bold" size="12.0" />
                      </font></Button>

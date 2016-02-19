@@ -31,7 +31,16 @@ public final class Notifier {
     }
 
     
-    
+    /**
+     * Shows notification
+     * 
+     * @param notifierType Type of the notification INFORMATION, WARNING, ERROR, CUSTOM
+     * @param title Title of the notification
+     * @param text Text to be displayed
+     * @param position Position of the notification on the screen/stage
+     * @param eh event handler that shoud be used/ onAction
+     * @param imgUrl Graphic of the notification
+     */
     public static void showNotification(NotifierType notifierType, String title, String text, Pos position, EventHandler<ActionEvent> eh, String... imgUrl) {
         Node graphic = null;
         switch (notifierType) {
@@ -75,6 +84,16 @@ public final class Notifier {
         }
     }
 
+    /**
+     * 
+     * @param notifierType
+     * @param title
+     * @param text
+     * @param position
+     * @param owner
+     * @param eh
+     * @param imgUrl 
+     */
     public static void showNotification(NotifierType notifierType, String title, String text, Pos position, Stage owner, EventHandler<ActionEvent> eh, String... imgUrl) {
         Node graphic = null;
         switch (notifierType) {

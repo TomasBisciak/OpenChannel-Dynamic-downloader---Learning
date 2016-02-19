@@ -11,7 +11,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane prefHeight="428.0" prefWidth="977.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="openchannel_dynamic_downloader.controllers.FxmlSchedulerViewController">
+<BorderPane prefHeight="636.0" prefWidth="977.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="openchannel_dynamic_downloader.controllers.FxmlSchedulerViewController">
    <center>
       <BorderPane BorderPane.alignment="CENTER">
          <BorderPane.margin>
@@ -25,17 +25,30 @@
                         <Insets bottom="20.0" left="100.0" right="100.0" />
                      </BorderPane.margin>
                      <children>
-                        <VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="225.0" prefWidth="697.0" spacing="15.0" style="-fx-background-color: #DADFE1; -fx-background-insets: -15;">
+                        <VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="225.0" prefWidth="697.0" spacing="5.0" style="-fx-background-color: #DADFE1; -fx-background-insets: -15;">
                            <children>
-                              <HBox alignment="CENTER_LEFT">
+                              <HBox alignment="CENTER_LEFT" spacing="10.0">
                                  <children>
                                     <Label text="Scheduler time table" textFill="#7e008a">
                                        <font>
                                           <Font size="14.0" />
                                        </font>
                                     </Label>
+                                    <Button fx:id="applyChangesBtn" mnemonicParsing="false" onAction="#setApplyChanges" style="-fx-background-radius: 4 4 4 4; -fx-background-color: #3498db;" text="Apply changes" textFill="WHITE">
+                                       <font>
+                                          <Font name="System Bold" size="12.0" />
+                                       </font></Button>
+                                    <Label fx:id="acclbl" opacity="0.0" text="Applied change" textFill="#008600" />
                                  </children>
                               </HBox>
+                              <Label prefHeight="17.0" prefWidth="624.0" text="   1      2      3      4      5      6      7      8      9    10    11    12    13    14    15    16    17    18    19    20    21    22    23    24">
+                                 <VBox.margin>
+                                    <Insets left="75.0" />
+                                 </VBox.margin>
+                                 <font>
+                                    <Font name="System Italic" size="12.0" />
+                                 </font>
+                              </Label>
                               <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="10.0">
                                  <children>
                                     <VBox alignment="CENTER_RIGHT" prefHeight="200.0" prefWidth="100.0" spacing="10.0">
@@ -95,29 +108,93 @@
                               <HBox alignment="CENTER" prefHeight="12.0" prefWidth="977.0" spacing="5.0">
                                  <children>
                                     <Label text="Active" />
-                                    <ToggleButton mnemonicParsing="false" prefHeight="11.0" prefWidth="26.0" style="-fx-background-color: #3498db; -fx-background-radius: 0;" />
+                                    <ToggleButton mnemonicParsing="false" mouseTransparent="true" prefHeight="11.0" prefWidth="26.0" style="-fx-background-color: #3498db; -fx-background-radius: 0;" />
                                     <Label text="Inactive" />
-                                    <ToggleButton mnemonicParsing="false" prefHeight="11.0" prefWidth="26.0" style="-fx-background-color: #9b59b6; -fx-background-radius: 0;" />
+                                    <ToggleButton mnemonicParsing="false" mouseTransparent="true" prefHeight="11.0" prefWidth="26.0" style="-fx-background-color: #9b59b6; -fx-background-radius: 0;" />
                                  </children>
                               </HBox>
                            </children>
                         </VBox>
-                        <VBox alignment="CENTER" spacing="5.0">
+                        <VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="113.0" prefWidth="727.0" spacing="5.0" style="-fx-background-color: #DADFE1;">
+                           <VBox.margin>
+                              <Insets left="25.0" right="25.0" top="25.0" />
+                           </VBox.margin>
                            <children>
-                              <CheckBox mnemonicParsing="false" text="Use download limiter" />
-                              <HBox alignment="CENTER" prefWidth="678.0" spacing="10.0">
+                              <HBox alignment="CENTER_LEFT" prefHeight="7.0" prefWidth="712.0">
                                  <children>
-                                    <Slider blockIncrement="50.0" majorTickUnit="500.0" max="5000.0" maxHeight="-Infinity" maxWidth="-Infinity" minorTickCount="50" prefHeight="38.0" prefWidth="670.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" />
+                                    <Button fx:id="btnInactiveAll" mnemonicParsing="false" onAction="#inactiveAllOnEvent" style="-fx-background-radius: 4 0 0 4; -fx-background-color: #3498db;" text="Inactive all" textFill="WHITE">
+                                       <font>
+                                          <Font name="System Bold" size="12.0" />
+                                       </font>
+                                    </Button>
+                                    <Button fx:id="btnActiveAll" layoutX="10.0" layoutY="20.0" mnemonicParsing="false" onAction="#activeAllOnEvent" style="-fx-background-radius: 0 4 4 0; -fx-background-color: #3498db;" text="Active all" textFill="WHITE">
+                                       <font>
+                                          <Font name="System Bold" size="12.0" />
+                                       </font>
+                                    </Button>
                                  </children>
                                  <VBox.margin>
-                                    <Insets left="70.0" />
+                                    <Insets left="15.0" top="10.0" />
                                  </VBox.margin>
                               </HBox>
-                              <Label text="Limit: kB/s" />
+                              <HBox alignment="CENTER_LEFT" prefHeight="19.0" prefWidth="712.0">
+                                 <children>
+                                    <Button fx:id="btnMonday" mnemonicParsing="false" style="-fx-background-radius: 4 0 0 4; -fx-background-color: #3498db;" text="Monday" textFill="WHITE">
+                                       <font>
+                                          <Font name="System Bold" size="12.0" />
+                                       </font>
+                                    </Button>
+                                    <Button fx:id="btnTuesday" mnemonicParsing="false" style="-fx-background-radius: 0; -fx-background-color: #3498db;" text="Tuesday" textFill="WHITE">
+                                       <font>
+                                          <Font name="System Bold" size="12.0" />
+                                       </font>
+                                    </Button>
+                                    <Button fx:id="btnWednesday" mnemonicParsing="false" style="-fx-background-radius: 0; -fx-background-color: #3498db;" text="Wednesday" textFill="WHITE">
+                                       <font>
+                                          <Font name="System Bold" size="12.0" />
+                                       </font>
+                                    </Button>
+                                    <Button fx:id="btnThursday" mnemonicParsing="false" style="-fx-background-radius: 0; -fx-background-color: #3498db;" text="Thursday" textFill="WHITE">
+                                       <font>
+                                          <Font name="System Bold" size="12.0" />
+                                       </font>
+                                    </Button>
+                                    <Button fx:id="btnFriday" mnemonicParsing="false" style="-fx-background-radius: 0; -fx-background-color: #3498db;" text="Friday" textFill="WHITE">
+                                       <font>
+                                          <Font name="System Bold" size="12.0" />
+                                       </font>
+                                    </Button>
+                                    <Button fx:id="btnSaturday" mnemonicParsing="false" style="-fx-background-radius: 0; -fx-background-color: #3498db;" text="Saturday" textFill="WHITE">
+                                       <font>
+                                          <Font name="System Bold" size="12.0" />
+                                       </font>
+                                    </Button>
+                                    <Button fx:id="btnSunday" mnemonicParsing="false" style="-fx-background-radius: 0 4 4 0; -fx-background-color: #3498db;" text="Sunday" textFill="WHITE">
+                                       <font>
+                                          <Font name="System Bold" size="12.0" />
+                                       </font>
+                                    </Button>
+                                 </children>
+                                 <VBox.margin>
+                                    <Insets left="15.0" />
+                                 </VBox.margin>
+                              </HBox>
+                              <HBox alignment="CENTER_LEFT" layoutX="25.0" layoutY="48.0" prefHeight="19.0" prefWidth="712.0" spacing="5.0">
+                                 <children>
+                                    <Label text="Active hour range" />
+                                    <ComboBox fx:id="comboBoxActiveHourStart" prefHeight="25.0" prefWidth="61.0" visibleRowCount="24" />
+                                    <ComboBox fx:id="comboBoxActiveHourEnd" layoutX="110.0" layoutY="10.0" prefHeight="25.0" prefWidth="61.0" visibleRowCount="24" />
+                                    <Button fx:id="btnSelect" mnemonicParsing="false" onAction="#selectRange" prefHeight="13.0" prefWidth="50.0" style="-fx-background-radius: 4; -fx-background-color: #3498db;" text="Select" textFill="WHITE">
+                                       <font>
+                                          <Font name="System Bold" size="12.0" />
+                                       </font>
+                                    </Button>
+                                 </children>
+                                 <VBox.margin>
+                                    <Insets bottom="10.0" left="15.0" />
+                                 </VBox.margin>
+                              </HBox>
                            </children>
-                           <VBox.margin>
-                              <Insets top="20.0" />
-                           </VBox.margin>
                         </VBox>
                      </children>
                   </VBox>

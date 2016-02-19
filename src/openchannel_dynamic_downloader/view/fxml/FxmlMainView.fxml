@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.web.*?>
+<?import javafx.scene.effect.*?>
 <?import javafx.scene.chart.*?>
 <?import javafx.geometry.*?>
 <?import javafx.scene.image.*?>
@@ -14,28 +16,77 @@
    <content>
       <BorderPane prefHeight="286.0" prefWidth="382.0" style="-fx-background-color: #090a0c,        linear-gradient(#38424b 0%, #1f2429 20%, #191d22 100%),        linear-gradient(#20262b, #191d22),        radial-gradient(center 50% 0%, radius 100%, rgba(114,131,148,0.9), rgba(255,255,255,0));">
          <top>
-            <MenuBar BorderPane.alignment="CENTER">
-              <menus>
-                <Menu mnemonicParsing="false" text="File">
-                  <items>
-                    <MenuItem mnemonicParsing="false" text="Close" />
-                  </items>
-                </Menu>
-                <Menu mnemonicParsing="false" text="Edit">
-                  <items>
-                    <MenuItem mnemonicParsing="false" text="Delete" />
-                  </items>
-                </Menu>
-                <Menu mnemonicParsing="false" text="Help">
-                  <items>
-                    <MenuItem mnemonicParsing="false" text="About" />
-                  </items>
-                </Menu>
-              </menus>
+            <HBox BorderPane.alignment="CENTER">
                <BorderPane.margin>
                   <Insets bottom="20.0" />
                </BorderPane.margin>
-            </MenuBar>
+               <children>
+                  <MenuBar HBox.hgrow="ALWAYS">
+                    <menus>
+                      <Menu mnemonicParsing="false" text="File">
+                        <items>
+                          <MenuItem mnemonicParsing="false" text="Close" />
+                        </items>
+                      </Menu>
+                      <Menu mnemonicParsing="false" text="Edit">
+                        <items>
+                          <MenuItem mnemonicParsing="false" text="Delete" />
+                        </items>
+                      </Menu>
+                      <Menu mnemonicParsing="false" text="Help">
+                        <items>
+                          <MenuItem mnemonicParsing="false" onAction="#showAboutView" text="About" />
+                              <MenuItem mnemonicParsing="false" onAction="#showLic" text="License" />
+                              <SeparatorMenuItem mnemonicParsing="false" />
+                              <MenuItem mnemonicParsing="false" text="Feedback" />
+                              <MenuItem mnemonicParsing="false" text="Support" />
+                        </items>
+                      </Menu>
+                        <Menu mnemonicParsing="false" text="Update" />
+                        <Menu fx:id="outdatedMenu" mnemonicParsing="false" onAction="#showInfo" text="Outdated" />
+                    </menus>
+                  </MenuBar>
+                  <StackPane maxWidth="-Infinity" prefHeight="25.0" prefWidth="286.0" HBox.hgrow="ALWAYS">
+                     <children>
+                        <MenuBar prefHeight="25.0" prefWidth="279.0">
+                          <menus>
+                            <Menu mnemonicParsing="false" />
+                          </menus>
+                        </MenuBar>
+                        <HBox alignment="CENTER" prefHeight="25.0" prefWidth="238.0">
+                           <children>
+                              <AnchorPane prefHeight="25.0" prefWidth="73.0">
+                                 <children>
+                                    <MenuBar>
+                                      <menus>
+                                        <Menu mnemonicParsing="false" text="Aplication Update">
+                                          <items>
+                                            <MenuItem mnemonicParsing="false" text="Pause" />
+                                                <MenuItem mnemonicParsing="false" text="Stop" />
+                                          </items>
+                                        </Menu>
+                                      </menus>
+                                    </MenuBar>
+                                 </children>
+                              </AnchorPane>
+                              <ProgressBar prefHeight="18.0" prefWidth="141.0" progress="0.29" />
+                           </children>
+                        </HBox>
+                     </children>
+                  </StackPane>
+                  <MenuBar>
+                    <menus>
+                      <Menu fx:id="mLog" mnemonicParsing="false" text="Logged as : ">
+                        <items>
+                          <MenuItem fx:id="midf" mnemonicParsing="false" onAction="#openDownFolder" text="Downloads folder" />
+                              <MenuItem fx:id="cpmi" mnemonicParsing="false" onAction="#changeUserPasswordAction" text="Change password" />
+                        </items>
+                      </Menu>
+                        <Menu disable="true" mnemonicParsing="false" />
+                    </menus>
+                  </MenuBar>
+               </children>
+            </HBox>
          </top>
          <left>
             <TitledPane animated="false" collapsible="false" maxWidth="-Infinity" prefHeight="3000.0" prefWidth="209.0" text="Menu">
@@ -44,7 +95,7 @@
                      <content>
                         <BorderPane prefHeight="577.0" prefWidth="203.0" style="-fx-background-color: 0; -fx-border-width: 0;" BorderPane.alignment="CENTER">
                            <top>
-                              <VBox minHeight="-Infinity" prefHeight="568.0" prefWidth="193.0" spacing="2.0" style="-fx-background-color: linear-gradient(to right, #f7f7f7 0%,#e5e5e5 100%);;">
+                              <VBox fx:id="menuHolder" minHeight="-Infinity" prefHeight="606.0" prefWidth="207.0" spacing="2.0" style="-fx-background-color: linear-gradient(to right, #f7f7f7 0%,#e5e5e5 100%);">
                                  <children>
                                     <Label layoutX="10.0" layoutY="37.0" text="Preferences/Settings">
                                        <opaqueInsets>
@@ -57,8 +108,19 @@
                                           <Font name="System Italic" size="12.0" />
                                        </font>
                                     </Label>
-                                    <ToggleButton fx:id="allMenuBtn1" focusTraversable="false" layoutX="10.0" layoutY="29.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0;" text="Settings" />
-                                    <ToggleButton fx:id="allMenuBtn11" focusTraversable="false" layoutX="10.0" layoutY="29.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0;" text="Security" />
+                                    <ToggleButton fx:id="prefBtn" focusTraversable="false" layoutX="10.0" layoutY="29.0" mnemonicParsing="false" onAction="#setViewPreferences" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0;" text="Settings">
+                                       <cursor>
+                                          <Cursor fx:constant="HAND" />
+                                       </cursor></ToggleButton>
+                                    <ToggleButton fx:id="allMenuBtn11" focusTraversable="false" layoutX="10.0" layoutY="29.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0;" text="Security">
+                                       <cursor>
+                                          <Cursor fx:constant="HAND" />
+                                       </cursor></ToggleButton>
+                                    <ToggleButton fx:id="incognitoToggleButton" focusTraversable="false" layoutX="10.0" layoutY="212.0" mnemonicParsing="false" onAction="#incognitoOnEvent" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0; -fx-background-image: url(&quot;https://cdn2.iconfinder.com/data/icons/e-commerce-icons-2/256/Ecommerce_Icons_Rose_Color-05-128.png&quot;); -fx-background-repeat: no-repeat; -fx-background-position: 10 center; -fx-background-size: 40;" text="Incognito mode">
+                                       <cursor>
+                                          <Cursor fx:constant="HAND" />
+                                       </cursor>
+                                    </ToggleButton>
                                     <Label text="Downloads">
                                        <opaqueInsets>
                                           <Insets />
@@ -70,12 +132,23 @@
                                           <Font name="System Italic" size="12.0" />
                                        </font>
                                     </Label>
-                                    <ToggleButton fx:id="allMenuBtn" focusTraversable="false" mnemonicParsing="false" onAction="#setViewDownloads" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0;" text="All" />
+                                    <ToggleButton fx:id="allMenuBtn" focusTraversable="false" mnemonicParsing="false" onAction="#setViewDownloads" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0;" text="All">
+                                       <cursor>
+                                          <Cursor fx:constant="HAND" />
+                                       </cursor></ToggleButton>
                                     <Pane fx:id="dListPane" VBox.vgrow="NEVER" />
-                                    <ToggleButton fx:id="downloadingMenuBtn" focusTraversable="false" layoutX="10.0" layoutY="29.0" mnemonicParsing="false" onAction="#setViewDownloading" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0;" text="Downloading" />
-                                    <ToggleButton fx:id="completedMenuBtn" focusTraversable="false" layoutX="10.0" layoutY="58.0" mnemonicParsing="false" onAction="#setViewCompleted" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0;" text="Completed" />
-                                    <ToggleButton fx:id="inactiveMenuBtn" focusTraversable="false" layoutX="10.0" layoutY="112.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0;" text="Inactive" />
-                                    <ToggleButton fx:id="databaseToggleButton2" focusTraversable="false" layoutX="10.0" layoutY="377.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0;" text="History" />
+                                    <ToggleButton fx:id="downloadingMenuBtn" focusTraversable="false" layoutX="10.0" layoutY="29.0" mnemonicParsing="false" onAction="#setViewDownloading" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0;" text="Downloading">
+                                       <cursor>
+                                          <Cursor fx:constant="HAND" />
+                                       </cursor></ToggleButton>
+                                    <ToggleButton fx:id="completedMenuBtn" focusTraversable="false" layoutX="10.0" layoutY="58.0" mnemonicParsing="false" onAction="#setViewCompleted" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0;" text="Completed">
+                                       <cursor>
+                                          <Cursor fx:constant="HAND" />
+                                       </cursor></ToggleButton>
+                                    <ToggleButton fx:id="inactiveMenuBtn" focusTraversable="false" layoutX="10.0" layoutY="112.0" mnemonicParsing="false" onAction="#setViewInactive" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0;" text="Inactive">
+                                       <cursor>
+                                          <Cursor fx:constant="HAND" />
+                                       </cursor></ToggleButton>
                                     <Label layoutX="10.0" layoutY="112.0" text="Scheduler">
                                        <opaqueInsets>
                                           <Insets />
@@ -87,8 +160,14 @@
                                           <Font name="System Italic" size="12.0" />
                                        </font>
                                     </Label>
-                                    <ToggleButton fx:id="schedulerMenuBtn" focusTraversable="false" layoutX="10.0" layoutY="137.0" mnemonicParsing="false" onAction="#setViewScheduler" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0;" text="Scheduler" />
-                                    <ToggleButton fx:id="activateMenuBtn" focusTraversable="false" layoutX="10.0" layoutY="104.0" mnemonicParsing="false" onMouseClicked="#activateScheduler" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0;" text="Activate" />
+                                    <ToggleButton fx:id="schedulerMenuBtn" focusTraversable="false" layoutX="10.0" layoutY="137.0" mnemonicParsing="false" onAction="#setViewScheduler" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0;" text="Scheduler">
+                                       <cursor>
+                                          <Cursor fx:constant="HAND" />
+                                       </cursor></ToggleButton>
+                                    <ToggleButton fx:id="activateMenuBtn" focusTraversable="false" layoutX="10.0" layoutY="104.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0;" text="Activate">
+                                       <cursor>
+                                          <Cursor fx:constant="HAND" />
+                                       </cursor></ToggleButton>
                                     <Label text="Scanner">
                                        <opaqueInsets>
                                           <Insets />
@@ -100,8 +179,19 @@
                                           <Font name="System Italic" size="12.0" />
                                        </font>
                                     </Label>
-                                    <ToggleButton fx:id="myFilesToggleBtn" focusTraversable="false" mnemonicParsing="false" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0;" text="Automated download" />
-                                    <ToggleButton focusTraversable="false" mnemonicParsing="false" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0;" text="REGEX Creator" />
+                                    <ToggleButton fx:id="myFilesToggleBtn" focusTraversable="false" mnemonicParsing="false" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0;" text="Automated download">
+                                       <cursor>
+                                          <Cursor fx:constant="HAND" />
+                                       </cursor></ToggleButton>
+                                    <ToggleButton focusTraversable="false" mnemonicParsing="false" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0;" text="REGEX Creator">
+                                       <cursor>
+                                          <Cursor fx:constant="HAND" />
+                                       </cursor></ToggleButton>
+                                    <ToggleButton focusTraversable="false" layoutX="10.0" layoutY="385.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0;" text="URL Tool">
+                                       <cursor>
+                                          <Cursor fx:constant="HAND" />
+                                       </cursor>
+                                    </ToggleButton>
                                     <Label text="Database">
                                        <opaqueInsets>
                                           <Insets />
@@ -113,7 +203,10 @@
                                           <Font name="System Italic" size="12.0" />
                                        </font>
                                     </Label>
-                                    <ToggleButton fx:id="databaseToggleButton" focusTraversable="false" mnemonicParsing="false" onAction="#setViewDatabase" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0;" text="H2 Database access" />
+                                    <ToggleButton fx:id="databaseToggleButton" focusTraversable="false" mnemonicParsing="false" onAction="#setViewDatabase" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0;" text="Access Db">
+                                       <cursor>
+                                          <Cursor fx:constant="HAND" />
+                                       </cursor></ToggleButton>
                                     <Label layoutX="10.0" layoutY="431.0" textFill="#8e44ad">
                                        <opaqueInsets>
                                           <Insets />
@@ -125,26 +218,37 @@
                                           <Font name="System Italic" size="12.0" />
                                        </font>
                                     </Label>
-                                    <ToggleButton fx:id="databaseToggleButton1" focusTraversable="false" layoutX="10.0" layoutY="331.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0; -fx-background-color: #8e44ad;" text="Go premium" textFill="WHITE" />
-                                    <ToggleButton fx:id="databaseToggleButton11" focusTraversable="false" layoutX="10.0" layoutY="450.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0; -fx-background-color: #e67e22;" text="Tutorial" textFill="WHITE" />
-                                    <ToggleButton fx:id="databaseToggleButton3" focusTraversable="false" layoutX="10.0" layoutY="404.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0; -fx-background-color: #2980b9;" text="Cloud sync" textFill="WHITE" />
+                                    <ToggleButton fx:id="premiumBtn" focusTraversable="false" layoutX="10.0" layoutY="331.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0; -fx-background-color: #8e44ad;" text="Go premium" textFill="WHITE">
+                                       <cursor>
+                                          <Cursor fx:constant="HAND" />
+                                       </cursor></ToggleButton>
+                                    <ToggleButton fx:id="tutorialBtn" focusTraversable="false" layoutX="10.0" layoutY="450.0" mnemonicParsing="false" onAction="#setViewTutorial" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0; -fx-background-color: #e67e22;" text="Tutorial" textFill="WHITE">
+                                       <cursor>
+                                          <Cursor fx:constant="HAND" />
+                                       </cursor></ToggleButton>
+                                    <ToggleButton fx:id="cloudBtn" focusTraversable="false" layoutX="10.0" layoutY="404.0" mnemonicParsing="false" onAction="#setViewCloud" prefHeight="25.0" prefWidth="254.0" style="-fx-background-radius: 0; -fx-background-color: #2980b9;" text="Cloud sync" textFill="WHITE">
+                                       <cursor>
+                                          <Cursor fx:constant="HAND" />
+                                       </cursor></ToggleButton>
                                  </children>
+                                 <BorderPane.margin>
+                                    <Insets />
+                                 </BorderPane.margin>
                               </VBox>
                            </top>
                            <center>
-                              <BorderPane prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: #090a0c,        linear-gradient(#38424b 0%, #1f2429 20%, #191d22 100%),        linear-gradient(#20262b, #191d22),        radial-gradient(center 50% 0%, radius 100%, rgba(114,131,148,0.9), rgba(255,255,255,0));" BorderPane.alignment="CENTER">
+                              <BorderPane prefHeight="185.0" prefWidth="207.0" style="-fx-background-color: #090a0c,        linear-gradient(#38424b 0%, #1f2429 20%, #191d22 100%),        linear-gradient(#20262b, #191d22),        radial-gradient(center 50% 0%, radius 100%, rgba(114,131,148,0.9), rgba(255,255,255,0));" BorderPane.alignment="CENTER">
                                  <top>
-                                    <VBox alignment="CENTER" prefHeight="181.0" prefWidth="207.0" BorderPane.alignment="CENTER">
-                                       <children>
-                                          <Label text="Advertisement place" textFill="WHITE">
-                                             <VBox.margin>
-                                                <Insets bottom="5.0" />
-                                             </VBox.margin>
-                                          </Label>
-                                       </children>
+                                    <VBox alignment="CENTER" prefHeight="113.0" prefWidth="207.0" BorderPane.alignment="CENTER">
                                        <BorderPane.margin>
                                           <Insets top="5.0" />
                                        </BorderPane.margin>
+                                       <children>
+                                          <Label prefHeight="66.0" prefWidth="106.0" style="-fx-background-repeat: no-repeat; -fx-background-position: center center;" text="        ">
+                                             <font>
+                                                <Font name="Times New Roman Bold" size="30.0" />
+                                             </font></Label>
+                                       </children>
                                     </VBox>
                                  </top>
                               </BorderPane>
@@ -158,18 +262,18 @@
          <center>
             <BorderPane>
                <top>
-                  <BorderPane BorderPane.alignment="CENTER">
+                  <BorderPane prefWidth="903.0" BorderPane.alignment="CENTER">
                      <top>
-                        <TitledPane animated="false" collapsible="false" prefHeight="0.0" prefWidth="903.0" text="MainView" BorderPane.alignment="CENTER">
-                           <content>
-                              <VBox fx:id="notifPaneHolder" alignment="TOP_CENTER" prefHeight="97.0" prefWidth="901.0" />
-                           </content>
-                        </TitledPane>
+                        <VBox fx:id="notifPaneHolder" BorderPane.alignment="CENTER">
+                           <children>
+                              <TitledPane animated="false" collapsible="false" prefHeight="0.0" prefWidth="903.0" text="MainView" />
+                           </children>
+                        </VBox>
                      </top>
                   </BorderPane>
                </top>
                <center>
-                  <SplitPane dividerPositions="0.6458923512747875" orientation="VERTICAL" prefHeight="200.0" prefWidth="160.0" BorderPane.alignment="CENTER">
+                  <SplitPane fx:id="splitPaneMainView" dividerPositions="0.63" orientation="VERTICAL" prefHeight="200.0" prefWidth="160.0" BorderPane.alignment="CENTER">
                      <items>
                         <ScrollPane fx:id="dynamicNode" fitToHeight="true" fitToWidth="true">
                            <content>
@@ -186,28 +290,539 @@
                         </ScrollPane>
                         <BorderPane>
                            <center>
-                              <TabPane prefWidth="5932.0" tabClosingPolicy="UNAVAILABLE">
-                                <tabs>
-                                  <Tab text="Download">
-                                       <content>
-                                          <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
-                                             <children>
-                                                <Label text="URL" textFill="#2980b9">
-                                                   <font>
-                                                      <Font name="Kokila Bold" size="27.0" />
-                                                   </font>
-                                                </Label>
-                                             </children>
-                                          </HBox>
-                                       </content>
-                                  </Tab>
-                                  <Tab text="Statistics">
-                                    <content>
-                                      <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
-                                    </content>
-                                  </Tab>
-                                </tabs>
-                              </TabPane>
+                              <StackPane>
+                                 <children>
+                                    <TabPane prefWidth="5932.0" tabClosingPolicy="UNAVAILABLE">
+                                      <tabs>
+                                        <Tab text="Download">
+                                             <content>
+                                                <BorderPane>
+                                                   <center>
+                                                      <VBox alignment="CENTER">
+                                                         <children>
+                                                            <Label text="Basic download , for more advanced downloading use &quot;Automated download&quot;">
+                                                               <VBox.margin>
+                                                                  <Insets bottom="10.0" />
+                                                               </VBox.margin>
+                                                            </Label>
+                                                            <Label layoutX="253.0" layoutY="56.0" text="http://www.example.com/images/cute-cat.png">
+                                                               <VBox.margin>
+                                                                  <Insets bottom="10.0" />
+                                                               </VBox.margin>
+                                                            </Label>
+                                                            <HBox alignment="CENTER" prefHeight="21.0" prefWidth="901.0" spacing="10.0">
+                                                               <children>
+                                                                  <Label text="Download file" textFill="#2980b9">
+                                                                     <font>
+                                                                        <Font name="Kokila Bold" size="20.0" />
+                                                                     </font>
+                                                                     <HBox.margin>
+                                                                        <Insets left="-33.0" />
+                                                                     </HBox.margin>
+                                                                  </Label>
+                                                                  <TextField fx:id="downFileTxtField" prefHeight="25.0" prefWidth="357.0" promptText="URL of the file " />
+                                                                  <Button fx:id="downBtn" mnemonicParsing="false" onAction="#confirmDownload" text="Download" />
+                                                               </children>
+                                                               <VBox.margin>
+                                                                  <Insets bottom="5.0" />
+                                                               </VBox.margin>
+                                                               <opaqueInsets>
+                                                                  <Insets />
+                                                               </opaqueInsets>
+                                                            </HBox>
+                                                            <HBox alignment="CENTER" layoutX="10.0" layoutY="101.0" prefHeight="21.0" prefWidth="901.0" spacing="10.0">
+                                                               <children>
+                                                                  <CheckBox mnemonicParsing="false" text="Generate MD5">
+                                                                     <HBox.margin>
+                                                                        <Insets left="-240.0" />
+                                                                     </HBox.margin>
+                                                                  </CheckBox>
+                                                               </children>
+                                                               <opaqueInsets>
+                                                                  <Insets />
+                                                               </opaqueInsets>
+                                                               <VBox.margin>
+                                                                  <Insets bottom="5.0" />
+                                                               </VBox.margin>
+                                                            </HBox>
+                                                            <HBox alignment="CENTER" prefHeight="30.0" prefWidth="634.0">
+                                                               <VBox.margin>
+                                                                  <Insets right="290.0" />
+                                                               </VBox.margin>
+                                                               <children>
+                                                                  <HBox alignment="CENTER" prefHeight="30.0" prefWidth="528.0" spacing="10.0">
+                                                                     <children>
+                                                                        <Label text="Number of connections" textFill="#2980b9">
+                                                                           <font>
+                                                                              <Font name="Kokila Bold" size="20.0" />
+                                                                           </font>
+                                                                           <HBox.margin>
+                                                                              <Insets left="-33.0" />
+                                                                           </HBox.margin>
+                                                                        </Label>
+                                                                        <TextField fx:id="numOfConTxtField" prefHeight="25.0" prefWidth="90.0" promptText="Num" text="3">
+                                                                           <HBox.margin>
+                                                                              <Insets />
+                                                                           </HBox.margin>
+                                                                        </TextField>
+                                                                        <Button fx:id="numOfConDefBtn" mnemonicParsing="false" onAction="#confirmDownload" text="Default" />
+                                                                     </children>
+                                                                     <opaqueInsets>
+                                                                        <Insets />
+                                                                     </opaqueInsets>
+                                                                     <HBox.margin>
+                                                                        <Insets />
+                                                                     </HBox.margin>
+                                                                  </HBox>
+                                                                  <Label fx:id="segmentedLbl" prefHeight="17.0" prefWidth="82.0" text="Segmented" />
+                                                               </children>
+                                                            </HBox>
+                                                            <Separator prefWidth="200.0">
+                                                               <VBox.margin>
+                                                                  <Insets top="5.0" />
+                                                               </VBox.margin>
+                                                            </Separator>
+                                                            <HBox alignment="CENTER" spacing="10.0">
+                                                               <children>
+                                                                  <Label text="Download directory" textFill="#2980b9">
+                                                                     <font>
+                                                                        <Font name="Kokila Bold" size="20.0" />
+                                                                     </font>
+                                                                     <HBox.margin>
+                                                                        <Insets left="-3.0" />
+                                                                     </HBox.margin>
+                                                                  </Label>
+                                                                  <TextField fx:id="dirTextField" prefHeight="25.0" prefWidth="389.0" promptText="Directory path" />
+                                                                  <Button fx:id="browseBtn" mnemonicParsing="false" text="Browse" />
+                                                                  <Button fx:id="dirDefBtn" layoutX="679.0" layoutY="12.0" mnemonicParsing="false" onAction="#setDirDef" text="Default" />
+                                                               </children>
+                                                               <VBox.margin>
+                                                                  <Insets top="5.0" />
+                                                               </VBox.margin>
+                                                            </HBox>
+                                                            <HBox alignment="CENTER" layoutX="10.0" layoutY="144.0" spacing="10.0">
+                                                               <children>
+                                                                  <Label text="File name" textFill="#2980b9">
+                                                                     <font>
+                                                                        <Font name="Kokila Bold" size="20.0" />
+                                                                     </font>
+                                                                     <HBox.margin>
+                                                                        <Insets left="-60.0" />
+                                                                     </HBox.margin>
+                                                                  </Label>
+                                                                  <TextField fx:id="nameOfTextField" prefHeight="25.0" prefWidth="309.0" promptText="Name of the file" />
+                                                                  <Button fx:id="nameDefBtn" mnemonicParsing="false" onAction="#setNameDef" text="Default" />
+                                                               </children>
+                                                            </HBox>
+                                                            <HBox alignment="CENTER" layoutX="10.0" layoutY="159.0" spacing="10.0" />
+                                                            <HBox alignment="CENTER" layoutX="10.0" layoutY="173.0" spacing="10.0" />
+                                                         </children>
+                                                      </VBox>
+                                                   </center>
+                                                   <bottom>
+                                                      <HBox alignment="CENTER" BorderPane.alignment="CENTER">
+                                                         <children>
+                                                            <Label text="Also supported: YouTube,SoundCloud,Vimeo links" />
+                                                         </children>
+                                                         <BorderPane.margin>
+                                                            <Insets bottom="5.0" />
+                                                         </BorderPane.margin>
+                                                      </HBox>
+                                                   </bottom>
+                                                </BorderPane>
+                                             </content>
+                                        </Tab>
+                                          <Tab text="HTTP Live Streaming">
+                                             <content>
+                                                <BorderPane prefHeight="200.0" prefWidth="200.0">
+                                                   <center>
+                                                      <VBox alignment="CENTER">
+                                                         <children>
+                                                            <Label text="The stream can be either an MP3 raw stream or an MPEG-TS containing multiplexed AAC audio and H.264 video. ">
+                                                               <VBox.margin>
+                                                                  <Insets bottom="10.0" />
+                                                               </VBox.margin>
+                                                            </Label>
+                                                            <Label layoutX="253.0" layoutY="56.0" text="text">
+                                                               <VBox.margin>
+                                                                  <Insets bottom="10.0" />
+                                                               </VBox.margin>
+                                                            </Label>
+                                                            <HBox alignment="CENTER" prefHeight="21.0" prefWidth="901.0" spacing="10.0">
+                                                               <children>
+                                                                  <Label text="Stream file" textFill="#2980b9">
+                                                                     <font>
+                                                                        <Font name="Kokila Bold" size="20.0" />
+                                                                     </font>
+                                                                     <HBox.margin>
+                                                                        <Insets left="-33.0" />
+                                                                     </HBox.margin>
+                                                                  </Label>
+                                                                  <TextField fx:id="downFileTxtField1" prefHeight="25.0" prefWidth="357.0" promptText="URL of the file " />
+                                                                  <Button mnemonicParsing="false" text="Stream" />
+                                                               </children>
+                                                               <VBox.margin>
+                                                                  <Insets bottom="5.0" />
+                                                               </VBox.margin>
+                                                               <opaqueInsets>
+                                                                  <Insets />
+                                                               </opaqueInsets>
+                                                            </HBox>
+                                                            <HBox alignment="CENTER" prefHeight="30.0" prefWidth="634.0">
+                                                               <VBox.margin>
+                                                                  <Insets right="290.0" />
+                                                               </VBox.margin>
+                                                               <children>
+                                                                  <HBox alignment="CENTER" prefHeight="30.0" prefWidth="528.0" spacing="10.0">
+                                                                     <children>
+                                                                        <Label text="Number of connections" textFill="#2980b9">
+                                                                           <font>
+                                                                              <Font name="Kokila Bold" size="20.0" />
+                                                                           </font>
+                                                                           <HBox.margin>
+                                                                              <Insets left="-33.0" />
+                                                                           </HBox.margin>
+                                                                        </Label>
+                                                                        <TextField fx:id="numOfConTxtField1" prefHeight="25.0" prefWidth="90.0" promptText="Num" text="3">
+                                                                           <HBox.margin>
+                                                                              <Insets />
+                                                                           </HBox.margin>
+                                                                        </TextField>
+                                                                        <Button mnemonicParsing="false" text="Default" />
+                                                                     </children>
+                                                                     <opaqueInsets>
+                                                                        <Insets />
+                                                                     </opaqueInsets>
+                                                                     <HBox.margin>
+                                                                        <Insets />
+                                                                     </HBox.margin>
+                                                                  </HBox>
+                                                                  <Label prefHeight="17.0" prefWidth="82.0" text="Segmented" />
+                                                               </children>
+                                                            </HBox>
+                                                            <Separator prefWidth="200.0">
+                                                               <VBox.margin>
+                                                                  <Insets top="5.0" />
+                                                               </VBox.margin>
+                                                            </Separator>
+                                                            <HBox alignment="CENTER" spacing="10.0">
+                                                               <children>
+                                                                  <Label text="Download directory" textFill="#2980b9">
+                                                                     <font>
+                                                                        <Font name="Kokila Bold" size="20.0" />
+                                                                     </font>
+                                                                     <HBox.margin>
+                                                                        <Insets left="-3.0" />
+                                                                     </HBox.margin>
+                                                                  </Label>
+                                                                  <TextField fx:id="dirTextField1" prefHeight="25.0" prefWidth="389.0" promptText="Directory path" />
+                                                                  <Button fx:id="browseBtn1" mnemonicParsing="false" text="Browse" />
+                                                                  <Button fx:id="dirDefBtn1" layoutX="679.0" layoutY="12.0" mnemonicParsing="false" onAction="#setDirDef" text="Default" />
+                                                               </children>
+                                                               <VBox.margin>
+                                                                  <Insets top="5.0" />
+                                                               </VBox.margin>
+                                                            </HBox>
+                                                            <HBox alignment="CENTER" layoutX="10.0" layoutY="144.0" spacing="10.0">
+                                                               <children>
+                                                                  <Label text="File name" textFill="#2980b9">
+                                                                     <font>
+                                                                        <Font name="Kokila Bold" size="20.0" />
+                                                                     </font>
+                                                                     <HBox.margin>
+                                                                        <Insets left="-60.0" />
+                                                                     </HBox.margin>
+                                                                  </Label>
+                                                                  <TextField fx:id="nameOfTextField1" prefHeight="25.0" prefWidth="309.0" promptText="Name of the file" />
+                                                                  <Button fx:id="nameDefBtn1" mnemonicParsing="false" onAction="#setNameDef" text="Default" />
+                                                               </children>
+                                                            </HBox>
+                                                            <HBox alignment="CENTER" layoutX="10.0" layoutY="159.0" spacing="10.0" />
+                                                            <HBox alignment="CENTER" layoutX="10.0" layoutY="173.0" spacing="10.0" />
+                                                         </children>
+                                                      </VBox>
+                                                   </center>
+                                                </BorderPane>
+                                             </content>
+                                          </Tab>
+                                          <Tab text="Fast download">
+                                             <content>
+                                                <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER">
+                                                   <content>
+                                                      <BorderPane>
+                                                         <center>
+                                                            <VBox>
+                                                               <children>
+                                                                  <Label text="Download your files even faster!">
+                                                                     <font>
+                                                                        <Font name="System Bold" size="15.0" />
+                                                                     </font>
+                                                                  </Label>
+                                                                  <Label layoutX="10.0" layoutY="10.0" text="OpenChannel has ability to download any file right from your clipboard!">
+                                                                     <font>
+                                                                        <Font size="13.0" />
+                                                                     </font>
+                                                                     <VBox.margin>
+                                                                        <Insets bottom="5.0" />
+                                                                     </VBox.margin>
+                                                                  </Label>
+                                                                  <HBox alignment="CENTER">
+                                                                     <children>
+                                                                        <ImageView fx:id="imgViewFd" fitHeight="172.0" fitWidth="532.0" pickOnBounds="true" preserveRatio="true">
+                                                                           <image>
+                                                                              <Image url="http://i.imgur.com/BJvGVsB.pnghttp://i.imgur.com/BJvGVsB.png" />
+                                                                           </image>
+                                                                        </ImageView>
+                                                                     </children>
+                                                                  </HBox>
+                                                                  <HBox alignment="CENTER">
+                                                                     <VBox.margin>
+                                                                        <Insets bottom="3.0" top="10.0" />
+                                                                     </VBox.margin>
+                                                                     <children>
+                                                                        <HBox alignment="CENTER_LEFT" prefWidth="532.0">
+                                                                           <children>
+                                                                              <Label text="Get link into your clipboard by pressing">
+                                                                                 <font>
+                                                                                    <Font size="13.0" />
+                                                                                 </font>
+                                                                              </Label>
+                                                                              <Label text="  Ctrl+C">
+                                                                                 <font>
+                                                                                    <Font name="System Bold" size="13.0" />
+                                                                                 </font>
+                                                                              </Label>
+                                                                           </children>
+                                                                        </HBox>
+                                                                     </children>
+                                                                  </HBox>
+                                                                  <HBox alignment="CENTER">
+                                                                     <VBox.margin>
+                                                                        <Insets bottom="3.0" />
+                                                                     </VBox.margin>
+                                                                     <children>
+                                                                        <HBox alignment="CENTER_LEFT" prefWidth="532.0">
+                                                                           <children>
+                                                                              <Label text="Press Download Key on your keyboard, you can bind this to any key on your keyboard.">
+                                                                                 <font>
+                                                                                    <Font size="13.0" />
+                                                                                 </font>
+                                                                              </Label>
+                                                                           </children>
+                                                                        </HBox>
+                                                                     </children>
+                                                                  </HBox>
+                                                                  <HBox alignment="CENTER">
+                                                                     <VBox.margin>
+                                                                        <Insets bottom="3.0" />
+                                                                     </VBox.margin>
+                                                                     <children>
+                                                                        <HBox alignment="CENTER_LEFT" prefWidth="532.0">
+                                                                           <children>
+                                                                              <Label text="By default , downlaod key  is ">
+                                                                                 <font>
+                                                                                    <Font size="13.0" />
+                                                                                 </font>
+                                                                              </Label>
+                                                                              <Label text="RIGHT Ctrl">
+                                                                                 <font>
+                                                                                    <Font name="System Bold" size="13.0" />
+                                                                                 </font>
+                                                                              </Label>
+                                                                              <Label text="  - You can change this key  here or in preferences">
+                                                                                 <font>
+                                                                                    <Font size="13.0" />
+                                                                                 </font>
+                                                                              </Label>
+                                                                           </children>
+                                                                        </HBox>
+                                                                     </children>
+                                                                  </HBox>
+                                                                  <HBox alignment="CENTER" spacing="5.0">
+                                                                     <VBox.margin>
+                                                                        <Insets bottom="3.0" />
+                                                                     </VBox.margin>
+                                                                     <children>
+                                                                        <HBox alignment="CENTER_LEFT" prefWidth="532.0" spacing="10.0">
+                                                                           <children>
+                                                                              <Label text="Download key:">
+                                                                                 <font>
+                                                                                    <Font size="13.0" />
+                                                                                 </font>
+                                                                              </Label>
+                                                                              <Button mnemonicParsing="false" text="Detect" />
+                                                                              <TextField editable="false" promptText="Detect Key" />
+                                                                              <CheckBox mnemonicParsing="false" mouseTransparent="true" />
+                                                                           </children>
+                                                                        </HBox>
+                                                                     </children>
+                                                                  </HBox>
+                                                                  <HBox alignment="CENTER" layoutX="30.0" layoutY="247.0">
+                                                                     <children>
+                                                                        <HBox prefHeight="19.0" prefWidth="532.0">
+                                                                           <children>
+                                                                              <Label text="Try it here">
+                                                                                 <font>
+                                                                                    <Font name="System Bold" size="13.0" />
+                                                                                 </font>
+                                                                              </Label>
+                                                                           </children>
+                                                                        </HBox>
+                                                                     </children>
+                                                                     <VBox.margin>
+                                                                        <Insets top="10.0" />
+                                                                     </VBox.margin>
+                                                                  </HBox>
+                                                                  <HBox alignment="CENTER" layoutX="30.0" layoutY="351.0" spacing="10.0">
+                                                                     <children>
+                                                                        <HBox alignment="CENTER_LEFT" prefWidth="532.0" spacing="10.0">
+                                                                           <children>
+                                                                              <Label text="Copy this link">
+                                                                                 <font>
+                                                                                    <Font size="13.0" />
+                                                                                 </font>
+                                                                              </Label>
+                                                                              <TextField editable="false" prefHeight="25.0" prefWidth="397.0" text="http://mirror.internode.on.net/pub/test/10meg.test3" />
+                                                                           </children>
+                                                                        </HBox>
+                                                                     </children>
+                                                                  </HBox>
+                                                                  <HBox alignment="CENTER" layoutX="30.0" layoutY="370.0">
+                                                                     <children>
+                                                                        <HBox alignment="CENTER_LEFT" prefWidth="532.0">
+                                                                           <children>
+                                                                              <Label text="Now press">
+                                                                                 <font>
+                                                                                    <Font size="13.0" />
+                                                                                 </font>
+                                                                              </Label>
+                                                                              <Label text=" Download Key">
+                                                                                 <font>
+                                                                                    <Font name="System Bold" size="13.0" />
+                                                                                 </font>
+                                                                              </Label>
+                                                                           </children>
+                                                                        </HBox>
+                                                                     </children>
+                                                                     <VBox.margin>
+                                                                        <Insets top="3.0" />
+                                                                     </VBox.margin>
+                                                                  </HBox>
+                                                               </children>
+                                                               <opaqueInsets>
+                                                                  <Insets />
+                                                               </opaqueInsets>
+                                                               <padding>
+                                                                  <Insets left="20.0" top="10.0" />
+                                                               </padding>
+                                                            </VBox>
+                                                         </center>
+                                                      </BorderPane>
+                                                   </content>
+                                                </ScrollPane>
+                                             </content>
+                                          </Tab>
+                                        <Tab text="Statistics">
+                                             <content>
+                                                <BorderPane prefHeight="200.0" prefWidth="200.0">
+                                                   <center>
+                                                      <BorderPane fx:id="graphHolder" BorderPane.alignment="CENTER" />
+                                                   </center>
+                                                   <bottom>
+                                                      <HBox alignment="CENTER_LEFT" BorderPane.alignment="CENTER">
+                                                         <BorderPane.margin>
+                                                            <Insets bottom="10.0" left="10.0" />
+                                                         </BorderPane.margin>
+                                                         <children>
+                                                            <ToggleButton fx:id="toggleBtnSpeed" mnemonicParsing="false" style="-fx-background-radius: 5 0 0  5; -fx-background-color: #3498db;" text="Speed" textFill="WHITE">
+                                                               <cursor>
+                                                                  <Cursor fx:constant="HAND" />
+                                                               </cursor></ToggleButton>
+                                                            <ToggleButton fx:id="toggleButtonDownFreq" layoutX="10.0" layoutY="10.0" mnemonicParsing="false" style="-fx-background-radius: 0; -fx-background-color: #3498db;" text="Download Frequency" textFill="WHITE">
+                                                               <cursor>
+                                                                  <Cursor fx:constant="HAND" />
+                                                               </cursor></ToggleButton>
+                                                            <ToggleButton fx:id="toggleBtnDataDownloaded" layoutX="117.0" layoutY="10.0" mnemonicParsing="false" style="-fx-background-radius: 0; -fx-background-color: #3498db;" text="Data downloaded" textFill="WHITE">
+                                                               <cursor>
+                                                                  <Cursor fx:constant="HAND" />
+                                                               </cursor>
+                                                            </ToggleButton>
+                                                            <ToggleButton fx:id="toggleButtonState" layoutX="245.0" layoutY="10.0" mnemonicParsing="false" style="-fx-background-radius: 0; -fx-background-color: #3498db;" text="State" textFill="WHITE">
+                                                               <cursor>
+                                                                  <Cursor fx:constant="HAND" />
+                                                               </cursor>
+                                                            </ToggleButton>
+                                                            <ToggleButton fx:id="toggleButtonFileType" layoutX="122.0" layoutY="10.0" mnemonicParsing="false" style="-fx-background-radius: 0 5 5 0; -fx-background-color: #3498db;" text="File Type" textFill="WHITE">
+                                                               <cursor>
+                                                                  <Cursor fx:constant="HAND" />
+                                                               </cursor></ToggleButton>
+                                                            <HBox alignment="CENTER_RIGHT" prefHeight="0.0" prefWidth="200.0" HBox.hgrow="ALWAYS">
+                                                               <children>
+                                                                  <Label text="Resolution">
+                                                                     <HBox.margin>
+                                                                        <Insets right="10.0" />
+                                                                     </HBox.margin>
+                                                                  </Label>
+                                                                  <ChoiceBox fx:id="choiceBoxResolution" prefWidth="150.0">
+                                                                     <HBox.margin>
+                                                                        <Insets right="5.0" />
+                                                                     </HBox.margin>
+                                                                  </ChoiceBox>
+                                                               </children>
+                                                            </HBox>
+                                                         </children>
+                                                      </HBox>
+                                                   </bottom>
+                                                   <top>
+                                                      <Accordion BorderPane.alignment="CENTER">
+                                                        <panes>
+                                                          <TitledPane animated="false" text="Software stats">
+                                                            <content>
+                                                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+                                                            </content>
+                                                          </TitledPane>
+                                                        </panes>
+                                                      </Accordion>
+                                                   </top>
+                                                </BorderPane>
+                                             </content>
+                                        </Tab>
+                                          <Tab text="Connection">
+                                             <content>
+                                                <Accordion>
+                                                  <panes>
+                                                    <TitledPane animated="false" text="Third-party Speed Test   http://testmy.net/">
+                                                      <content>
+                                                            <StackPane>
+                                                               <children>
+                                                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                                                                     <children>
+                                                                        <WebView fx:id="webViewConnection" cache="true" cacheHint="QUALITY" fontScale="1.1" prefHeight="-1.0" prefWidth="-1.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                                                        <Button fx:id="btnConnOpenInBrowser" mnemonicParsing="false" text="Open in browser" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="10.0" />
+                                                                     </children>
+                                                                  </AnchorPane>
+                                                               </children>
+                                                            </StackPane>
+                                                      </content>
+                                                    </TitledPane>
+                                                    <TitledPane animated="false" expanded="false" text="Settings">
+                                                      <content>
+                                                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+                                                      </content>
+                                                    </TitledPane>
+                                                  </panes>
+                                                </Accordion>
+                                             </content>
+                                          </Tab>
+                                      </tabs>
+                                    </TabPane>
+                                    <AnchorPane pickOnBounds="false" prefHeight="200.0" prefWidth="200.0">
+                                       <children>
+                                          <Button fx:id="btnExpandMinimize" layoutX="836.0" layoutY="14.0" mnemonicParsing="false" onAction="#btnExpandMinimizeEvent" style="-fx-background-radius: 3 3 0 0; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;" text="Minimize" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="4.0" />
+                                       </children>
+                                    </AnchorPane>
+                                 </children>
+                              </StackPane>
                            </center>
                         </BorderPane>
                      </items>
@@ -216,11 +831,34 @@
             </BorderPane>
          </center>
          <bottom>
-            <FlowPane fx:id="flowPaneSouth" alignment="CENTER_RIGHT" prefHeight="26.0" prefWidth="1112.0" style="-fx-background-color: linear-gradient(#F0F0F0, #D4D4D4);">
+            <HBox>
                <children>
-                  <RadioButton fx:id="rbtnDiskSpace" layoutX="1035.0" layoutY="15.0" mnemonicParsing="false" mouseTransparent="true" selected="true" style="-fx-mark-color: green;" text="disk space: Total: Usable:" visible="false" />
+                  <FlowPane alignment="CENTER_LEFT" columnHalignment="CENTER" maxWidth="730.0" prefHeight="26.0" prefWidth="240.0" prefWrapLength="729.0" style="-fx-background-color: linear-gradient(#F0F0F0, #D4D4D4);" HBox.hgrow="NEVER">
+                     <children>
+                        <ProgressBar fx:id="totalDownloadBar" prefHeight="18.0" prefWidth="208.0" progress="1.0" />
+                        <Label fx:id="progressPercentLbl" text="  0%" />
+                     </children>
+                  </FlowPane>
+                  <HBox alignment="CENTER_RIGHT" prefHeight="26.0" spacing="20.0" style="-fx-background-color: linear-gradient(#F0F0F0, #D4D4D4);" HBox.hgrow="ALWAYS">
+                     <HBox.margin>
+                        <Insets />
+                     </HBox.margin>
+                     <children>
+                        <Label fx:id="infoPanelThreadCountLabel" layoutX="87.0" layoutY="15.0" text="Threads:" />
+                        <Label fx:id="avgSpeedLbl" layoutX="92.0" layoutY="15.0" text="Average speed:601 kB/s" />
+                        <Label text="Session data :15MB" />
+                        <Label text="Total downloaded:11TB" />
+                        <Label text="DDS:Inactive" />
+                        <Label fx:id="appPortLbl" text="Application port:" />
+                        <RadioButton fx:id="rbtnDiskSpace" mnemonicParsing="false" mouseTransparent="true" text="Disk size: , Free space:">
+                           <HBox.margin>
+                              <Insets right="10.0" />
+                           </HBox.margin>
+                        </RadioButton>
+                     </children>
+                  </HBox>
                </children>
-            </FlowPane>
+            </HBox>
          </bottom>
       </BorderPane>
    </content>

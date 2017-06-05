@@ -17,13 +17,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
- * @author tomas
+ *Thread safe class
+ * @author tomas bisciak
  */
 public class DownloadThread extends Thread {
 
     private boolean isFinished;
 
+    private long bytesReadWhileActive;
     private long startByte;
     private long endByte;
     private int partNum;
@@ -31,40 +32,24 @@ public class DownloadThread extends Thread {
 
     private DownloadTask dtask;
 
-    //load from preferences
-    public static int readTimeout = 10000;
-    public static int connectionTimeout=10000;
+    public static int readTimeout = 60000;
+    public static int connectionTimeout = 60000;
 
-   // public volatile boolean active;
-    public volatile boolean killed;
+    private volatile boolean killed;
+    private final Object lock = new Object();
 
-    private int errorCode = 0x0;
-    int ERR_IO = 0x1;    //0001
-    int TWO = 0x2;    //0010
-    int THREE = 0x4;  //0100
-    int FOUR = 0x8;   //1000
+    public void setKilled(boolean killed) {
+        synchronized (lock) {
+            this.killed = killed;
+        }
+    }
 
+ 
     public DownloadThread() {
 
     }
 
-    //partial download
-    //START BYTE SPECIFIED FOR HTTP PARTIAL OFFSET!!!!!!! NOT FOR THE FILE ITSELF
-    //number of parts added cause of extra bytes
-    //change to reference
-     /*public DownloadThread(String threadName, long startByte, long endByte, String source, long taskId, String filePath, int partNum, int numberOfParts) {
 
-     this.setName(threadName);
-     this.startByte = startByte;
-     this.endByte = endByte;
-     this.taskId = taskId;
-     this.partNum = partNum;
-     this.source = source;
-     this.filePath = filePath;
-     this.numberOfParts = numberOfParts;
-
-     }
-     */
     public DownloadThread(String threadName, DownloadTask dtask, int partNum, long startByte, long endByte, String filePath) {
 
         this.setName(threadName);
@@ -77,24 +62,22 @@ public class DownloadThread extends Thread {
     }
 
     @Override
+    @SuppressWarnings("SleepWhileInLoop")
     public void run() {
 
-      try{
+        try {
 
             if (isDownloaded()) {
                 killed = true;
                 return;
             }
 
-            HttpURLConnection conn = (HttpURLConnection)new URL(dtask.getSource()).openConnection();
-            //will be set in downloader.handleRedirect
+            HttpURLConnection conn = (HttpURLConnection) new URL(dtask.getSource()).openConnection();
+
             conn.setReadTimeout(readTimeout);
             conn.setConnectTimeout(connectionTimeout);
-           // conn.setInstanceFollowRedirects(true);
-           // HttpURLConnection conn = Downloader.createFinalHttpURLConnection(dtask.getSource());
-         
-
-            //continue in downlaod process//or go form where yo usupposed to downlaod from anyway
+     
+           
             conn.setRequestProperty("Range",
                     "bytes=" + (startByte + getSizeOfFileSafe()) + "-" + endByte);//size of already downloaded
 
@@ -103,38 +86,18 @@ public class DownloadThread extends Thread {
 
             System.out.println("Range on http:" + (startByte + getSizeOfFileSafe()) + "-" + endByte);
 
-            //ok
-            System.out.println("Gonna download");
-            //active = true;
             try (
                     BufferedInputStream in = new BufferedInputStream(conn.getInputStream());
                     RandomAccessFile raf = new RandomAccessFile(filePath, "rwd")) {
 
                 int readed = -2;
                 byte[] buffer = new byte[DownloadTask.BUFFER_SIZE];//might be calculated form download
-                //offset
-                //removed seek
                 raf.seek(getSizeOfFileSafe());
-                //System.out.println("seeking:"+startByte + getSizeOfFileSafe()+" byte");
-                //pokial thread ma byt aktivny
-               // System.out.println("BEFORE WHILE");
                 while (true) {
 
-                    //citaj z url
-                    while (/*active &&*/ !killed && ((readed = in.read(buffer, 0, DownloadTask.BUFFER_SIZE)) != -1)) {
-                      // System.out.println("WRITING TO FILE");
-                        //zapisuj do suboru
+                    while (!killed && ((readed = in.read(buffer, 0, DownloadTask.BUFFER_SIZE)) != -1)) {
                         raf.write(buffer, 0, readed);
-                        /*
-                         while ((count = in.read(buffer, 0, buffer.length)) != -1) {
-                         file.write(buffer, 0, count);
-                         readed += count;
-                         du.setDownloaded(readed);
-                         }
-                         */
-                        //removed startbyte+size at downloaded
-                        //System.out.println("Thread:" + this.getName() + "File " + filePath + " Downloaded:" + (Files.size(Paths.get(filePath))) + " bytes ,From:" + (endByte - startByte) + " bytes");
-                        //   if ((startByte + Files.size(Paths.get(filePath))) == endByte) {
+                        bytesReadWhileActive += readed;
                         if (partNum == dtask.getNumberOfConnections()) {//check added cause of extra bytes , last part doesnt have extra bytes
 
                             if (Files.size(Paths.get(filePath)) == endByte - startByte) {
@@ -143,7 +106,7 @@ public class DownloadThread extends Thread {
                                 killed = true;
                                 return;
                             }
-                        } else {  //KEDZE VSETKY OSTATNE PARTY OKREM POSLEDNEHO MAJU EXTRA BYT ...
+                        } else { //extra byte 
                             if (Files.size(Paths.get(filePath)) == (endByte - startByte) + 1) {
                                 System.out.println("Thread:" + this.getName() + " DEBUG: download of part " + partNum + " completed");
                                 isFinished = true;
@@ -154,13 +117,14 @@ public class DownloadThread extends Thread {
                     }
 
                     if (killed) {
-                        System.out.println("Download thread for id:"+dtask.getId()+" with id:"+getId()+" HAS BEEN KILLED");
+                        System.out.println("Download thread for id:" + dtask.getId() + " with id:" + getId() + " HAS BEEN KILLED");
+                        // raf.close();
                         break;
                     }
 
                     try {
-                        System.out.println("download partnum:" + partNum + " thread Im sleeping");
-                        this.sleep(1000);
+                        
+                        sleep(1000);
                     } catch (InterruptedException ex) {
                         Logger.getLogger(DownloadThread.class.getName()).log(Level.SEVERE, null, ex);
                         System.out.println("INTERUPTED EXCEPTION REACHED");
@@ -179,7 +143,6 @@ public class DownloadThread extends Thread {
         }
 
         isDownloaded();
-        
 
     }
 
@@ -202,7 +165,7 @@ public class DownloadThread extends Thread {
                 return true;
             }
         } catch (Exception ex) {
-            Logger.getLogger(DownloadThread.class.getName()).log(Level.SEVERE, null, ex);
+           // Logger.getLogger(DownloadThread.class.getName()).log(Level.SEVERE, null, ex);
 
         }
         isFinished = false;
@@ -211,6 +174,10 @@ public class DownloadThread extends Thread {
 
     public boolean isFinished() {
         return isFinished;
+    }
+
+    public long getBytesReadWhileActive() {
+        return bytesReadWhileActive;
     }
 
 }

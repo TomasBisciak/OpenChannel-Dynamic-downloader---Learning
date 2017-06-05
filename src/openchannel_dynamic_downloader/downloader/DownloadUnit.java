@@ -104,7 +104,6 @@ public class DownloadUnit {
          setCompletedOnProperty(new SimpleStringProperty("Not completed"));
          setIdProperty(new SimpleLongProperty(id));*/
 
-        System.out.println("IS FXTHREAD?" + Platform.isFxApplicationThread());
         setNameProperty(new SimpleStringProperty(fileName));
         setSourceProperty(new SimpleStringProperty(source.toString()));
         setDirectory(directory);
@@ -273,9 +272,9 @@ public class DownloadUnit {
             try {
                 bytes += Files.size(Paths.get(getDirectory() + "/" + getName()));
             } catch (Exception ex) {
-                System.out.println("PROBLEM AT readDownloadedByteSize");
+                System.out.println("PROBLEM AT readDownloadedByteSize ID IS :" + getId());
                 System.out.println("--DEBUG DIRECTORY" + getDirectory());
-                //Logger.getLogger(DownloadTask.class.getName()).log(Level.SEVERE, null, ex);
+
             }
 
         } else {
@@ -283,8 +282,8 @@ public class DownloadUnit {
                 try {
                     bytes += Files.size(Paths.get(getDirectory() + "/" + getName() + FILENAME_PARTIAL + (i + 1)));
                 } catch (Exception ex) {
-                    System.out.println("PROBLEM AT readDownloadedByteSize");
-                    // Logger.getLogger(DownloadTask.class.getName()).log(Level.SEVERE, null, ex);
+                    System.out.println("PROBLEM AT readDownloadedByteSize ID IS :" + getId());
+                    System.out.println("--DEBUG DIRECTORY" + getDirectory());
                 }
             }
         }
@@ -294,19 +293,20 @@ public class DownloadUnit {
     }
 
     public final void setDownloaded(long l) {
-        // synchronized (lock) {
-        downloaded.set(l);
-        // }
-        //  stateChanged();
+        synchronized (lock) {
+            downloaded.set(l);
+        }
     }
 
     public final void setNumberOfConnections(int numberOfConnections) {
+
         if (numberOfConnections >= 1) {
             this.numOfConnections.set(numberOfConnections);
         } else {
             //todo something here
             System.out.println("Attempt to set invalid number of connections");
         }
+
     }
 
     public final int getNumberOfConnections() {
@@ -322,9 +322,9 @@ public class DownloadUnit {
     }
 
     public final void setProgress(double progress) {
+
         if (progress <= 1 && progress >= 0) {
             this.progress.set(progress);
-            System.out.println("Progress set :" + progress);
         }
 
     }
@@ -354,48 +354,19 @@ public class DownloadUnit {
     }
 
     public final void setState(int state) {
-        if (state >= -1 && state <= 4) {
-            this.state.set(state);
+        synchronized (lock) {
+            if (state >= -1 && state <= 4) {
+                this.state.set(state);
 
-        } else {
-            this.state.set(STATE_DOWNLOADING);
+            } else {
+                this.state.set(STATE_DOWNLOADING);
+            }
+            stateChanged();
         }
-        stateChanged();
+
     }
 
-    /*
-     private SimpleLongProperty id;
-     private SimpleStringProperty name;//can be set//file is upon completion
-     private SimpleStringProperty source;
-     private String directory;
-     private SimpleLongProperty size;//STORED IN BYTES/ REPRESENTED IN STRING AT TABLE
-
-     private SimpleStringProperty eta;//based on download speed and size
-     private SimpleDoubleProperty progress = new SimpleDoubleProperty(0.5);
-     ;//not sure if necessery since it can be calculated from size and downloaded
-     private SimpleLongProperty downloaded;//STORED IN BYTES/ REPRESENTED IN STRING AT TABLE
-     private SimpleDoubleProperty downloadSpeed = new SimpleDoubleProperty(0);
-     private SimpleStringProperty added;//calculates at runtime by application //stores at start in db
-     private SimpleStringProperty completedOn;////calculates at runtime by application //stores at completion to db
-
-     public static final String[] STATE_STRINGS = {"Failed", "Paused", "Downloading",
-     "Completed", "Cancelled"};
-
-     public static final int STATE_FAILED = -1;
-     public static final int STATE_PAUSED = 0;
-     public static final int STATE_DOWNLOADING = 1;//means downloading
-     public static final int STATE_COMPLETED = 2;
-     public static final int STATE_CANCELLED = 3;
-     public static final int STATE_SCHEDULED = 4;
-
-     private volatile SimpleIntegerProperty state = new SimpleIntegerProperty(STATE_DOWNLOADING);
-
-     public static final int CONNECTIONS_DEF = 3;
-
-     private String downloadDir;//not sure if used
-     private SimpleIntegerProperty numOfConnections = new SimpleIntegerProperty(CONNECTIONS_DEF);
-
-     */
+   
     @Override
     public String toString() {
         return "id \n" + getId() + "State:" + getState() + "\n Name:" + getName() + "\n Source:" + getSource() + "\n Directory:" + getDirectory()
@@ -425,7 +396,10 @@ public class DownloadUnit {
     }
 
     public final void setDirectory(String directory) {
-        this.directory = directory;
+        synchronized (lock) {
+            this.directory = directory;
+        }
+
     }
 
     public final long getDownloaded() {
@@ -562,13 +536,20 @@ public class DownloadUnit {
 
     public final double getPercentage() {
         try {
-            System.out.println("-------debug:downloaded:" + getDownloaded() + " size:" + getSize());
-            System.out.println("PERCENTAGE :" + getDownloaded() * 100 / getSize());
+           
             return (getDownloaded() * 100 / getSize());
         } catch (Exception e) {
-            //e.printStackTrace();
+            System.out.println("Problem at get percentage");
         }
         return 0;
+    }
+
+    public void cancel() {
+        System.out.println("Cancelling downlaod unit from DownloadUnit Class");
+        if (getState() == STATE_DOWNLOADING || getState() == STATE_PAUSED || getState() == STATE_SCHEDULED) {
+            setState(STATE_CANCELLED);
+        }
+
     }
 
 }

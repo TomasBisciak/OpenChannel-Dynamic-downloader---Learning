@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.web.*?>
+<?import javafx.scene.effect.*?>
+<?import javafx.scene.chart.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.text.*?>
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane prefHeight="625.0" prefWidth="894.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="openchannel_dynamic_downloader.controllers.FxmlPremiumViewController">
+   <center>
+      <StackPane BorderPane.alignment="CENTER">
+         <children>
+            <WebView fx:id="webViewPremium" prefHeight="200.0" prefWidth="200.0" />
+         </children>
+      </StackPane>
+   </center>
+   <top>
+      <HBox alignment="CENTER_LEFT" prefHeight="28.0" prefWidth="894.0" style="-fx-background-color: #2980b9;" BorderPane.alignment="CENTER">
+         <children>
+            <Label text="After purchase you have to enter Serial code into blabalbalbva" textFill="WHITE">
+               <HBox.margin>
+                  <Insets left="5.0" />
+               </HBox.margin>
+            </Label>
+            <HBox alignment="CENTER_RIGHT" HBox.hgrow="ALWAYS">
+               <children>
+                  <Button mnemonicParsing="false" style="-fx-background-color: #2c3e50;" text="Enter serial code" textFill="WHITE">
+                     <HBox.margin>
+                        <Insets bottom="5.0" right="10.0" top="5.0" />
+                     </HBox.margin>
+                  </Button>
+                  <Button layoutX="455.0" layoutY="15.0" mnemonicParsing="false" style="-fx-background-color: #2c3e50;" text="Open in browser" textFill="WHITE">
+                     <HBox.margin>
+                        <Insets bottom="5.0" right="10.0" top="5.0" />
+                     </HBox.margin>
+                  </Button>
+               </children>
+            </HBox>
+         </children>
+      </HBox>
+   </top>
+</BorderPane>

@@ -30,6 +30,7 @@ import openchannel_dynamic_downloader.controllers.FxmlMainViewController;
 import openchannel_dynamic_downloader.controls.EulaPane;
 import openchannel_dynamic_downloader.controls.Notifier;
 import openchannel_dynamic_downloader.controls.Notifier.NotifierType;
+import openchannel_dynamic_downloader.downloader.Downloader;
 import openchannel_dynamic_downloader.model.MainDataModel;
 import openchannel_dynamic_downloader.ockeyHook.OCKeyHook;
 import openchannel_dynamic_downloader.tray.Tray;
@@ -39,7 +40,7 @@ import org.jnativehook.GlobalScreen;
 import org.jnativehook.NativeHookException;
 
 /**
- *
+ * KNOWN ISSUES , CHANGING TIME ZONE CAN HAVE WIERD RESULTS, tracking dailyStats  in preferences
  * @author tomas
  */
 public class OpenChannel_Dynamic_Downloader extends Application {
@@ -80,9 +81,15 @@ public class OpenChannel_Dynamic_Downloader extends Application {
      */
     private static final FxmlMainViewController fxmlMvc = new FxmlMainViewController();
 
+    public static FxmlMainViewController getFxmlMvc() {
+        return fxmlMvc;
+    }
+
     public static void main(String[] args) {
         processArguments(args);
         launch(args);
+        //take from param if shutdownhook shoud be interpupted / some kind of privacy testing etc might be going on
+      //  Runtime.getRuntime().addShutdownHook(new ShutDownHook(false));
     }
 
     /**
@@ -93,10 +100,8 @@ public class OpenChannel_Dynamic_Downloader extends Application {
      */
     @Override
     public void start(Stage stage) throws Exception {
-
         showLoginWindow();
         executeOnStart();
-
     }
 //todo how to nice up code  maybe all this shodu run on jfxat and start new ones to run off of it
 
@@ -125,9 +130,7 @@ public class OpenChannel_Dynamic_Downloader extends Application {
         Platform.runLater(() -> {
             //primStage = stage;
             primStage.setTitle("OpenChannel " + Info.APP_VERSION + "\t Fast Lightweight Downloader");
-            primStage.getIcons().addAll(new Image(OpenChannel_Dynamic_Downloader.class.getResourceAsStream(Info.Resource.OCPI64)),
-                    new Image(OpenChannel_Dynamic_Downloader.class.getResourceAsStream(Info.Resource.OCPI32)),
-                    new Image(OpenChannel_Dynamic_Downloader.class.getResourceAsStream(Info.Resource.OCPI16)));
+            primStage.getIcons().add(new Image(OpenChannel_Dynamic_Downloader.class.getResourceAsStream(Info.Resource.OCPI64)));
 
             primStage.setMaximized(true);
             try {
@@ -159,11 +162,6 @@ public class OpenChannel_Dynamic_Downloader extends Application {
 
     public static Tray getTray() {
         return tray;
-    }
-
-    //TODO create safe exit of application
-    public static final void onApplicationClose() {
-
     }
 
     /**
@@ -244,7 +242,7 @@ public class OpenChannel_Dynamic_Downloader extends Application {
             primStage.setTitle("OpenChannel login");
             primStage
                     .getIcons().add(new Image(OpenChannel_Dynamic_Downloader.class
-                                    .getResourceAsStream(Info.Resource.OCPI)));
+                                    .getResourceAsStream(Info.Resource.OCPI16)));
 
             try {
                 primStage.setScene(new Scene((BorderPane) FXMLLoader.load(OpenChannel_Dynamic_Downloader.class.getResource(Info.Resource.FXML_FILE_LOGIN))));
@@ -283,6 +281,7 @@ public class OpenChannel_Dynamic_Downloader extends Application {
                         }
                         break;
                     }
+                    //CREATE DEBUG VERSION , WHERE I WILL REDIRECT STREAM FRO MCONSOLE INTO WINDOW AND USER CAN CHECK WHAT THE FUCK IS FUCKN UP / EXCEPTIONS / PRINTOUTS ETC
                     case "": {
 
                         break;
@@ -369,15 +368,10 @@ public class OpenChannel_Dynamic_Downloader extends Application {
     }
 
     private static void shutdownHook() {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                //execute before shutdown
-                GlobalScreen.unregisterNativeHook();
-            } catch (NativeHookException ex) {
-                Logger.getLogger(OpenChannel_Dynamic_Downloader.class.getName()).log(Level.SEVERE, null, ex);
-            }
-
-        }));
+        System.out.println("Shutdown hook added");
+         //take from param if shutdownhook shoud be interpupted / some kind of privacy testing etc might be going on
+        Runtime.getRuntime().addShutdownHook(new ShutDownHook(false));
+      
     }
 
     public static final int getAppPort() {

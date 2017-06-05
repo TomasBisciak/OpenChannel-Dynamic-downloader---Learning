@@ -14,6 +14,7 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseEvent;
@@ -34,6 +35,8 @@ public class FxmlPreferencesViewController implements Initializable {
     private Button confirm;
     @FXML
     private TextField txtFieldDownloadsFolder;
+    @FXML
+    private CheckBox cbTrayNotif;
     @FXML
     private Button btnBrowseDownloads;
     @FXML
@@ -93,10 +96,14 @@ public class FxmlPreferencesViewController implements Initializable {
            
 
         });
+        
+        cbTrayNotif.selectedProperty().addListener((val,oldVal,newVal)->{
+            
+        });
     }
 
     @FXML
-    private void confirmChanges() {
+    private void confirmChanges() {//CONFIRM CHANGES
         //if textField has no style set , value is supposed to be valid.//probably not best way of handling bud not bad either.
         FxmlMainViewController.showPaneNotification("Preferences updated.", 2000);
         if(txtFieldDownloadsFolder.getStyle().equals("")&&(txtFieldDownloadsFolder.getText().length()>0)){
@@ -106,6 +113,7 @@ public class FxmlPreferencesViewController implements Initializable {
         if(txtFieldNumOfCon.getStyle().equals("")){
              MainDataModel.getInstance().loginProfile.setNumOfConnectionsPerDownload(Integer.valueOf(txtFieldNumOfCon.getText()));
         }
+        
       
 
     }

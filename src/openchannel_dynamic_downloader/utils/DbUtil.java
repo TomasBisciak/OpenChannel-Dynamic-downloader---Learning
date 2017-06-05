@@ -5,17 +5,19 @@
  */
 package openchannel_dynamic_downloader.utils;
 
+import openchannel_dynamic_downloader.statistics.DailyStat;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import openchannel_dynamic_downloader.downloader.DownloadTask;
 import openchannel_dynamic_downloader.downloader.DownloadUnit;
 import openchannel_dynamic_downloader.h2.H2DatabaseConnector;
 import openchannel_dynamic_downloader.model.MainDataModel;
@@ -26,7 +28,43 @@ import openchannel_dynamic_downloader.model.MainDataModel;
  */
 public class DbUtil {
 
-    public static final void getUsersTableInfo() {
+//    
+//    private static final void createDailyStatsTable() {
+//        new H2DatabaseConnector(MainDataModel.getInstance().loginProfile) {
+//
+//            @Override
+//            public void execute() {
+//                try {
+//                    getStatement().execute(
+//                            "  CREATE TABLE dailyStats("
+//                            + "  ID BIGINT DEFAULT CAST(FORMATDATETIME(CURRENT_TIMESTAMP(), 'yyyyMMdd') AS BIGINT) PRIMARY KEY,"
+//                            + "  downBytes LONG NOT NULL SET DEFAULT '0'"
+//                            + ")"
+//                    );
+//
+//                    /*
+//                  
+//                     getStatement().execute("CREATE TABLE downloads(id bigint auto_increment,"
+//                     + "state INT NOT NULL,connections INT NOT NULL,name VARCHAR(255) NOT NULL,size LONG NOT NULL,"
+//                     + "source VARCHAR(1000) NOT NULL,added VARCHAR(255) NOT NULL,completedOn VARCHAR(255),downloadDir VARCHAR(255) NOT NULL);"
+//                     + "CREATE TABLE statistics(date DATE auto_increment,downloadedAmount LONG);"
+//                     );
+//                     } catch (SQLException ex) {
+//                     ex.printStackTrace();
+//                     }
+//                     */
+//                    //getStatement().execute("CREATE TABLE dailyStats();"
+//                    
+//                } catch (SQLException ex) {
+//                    ex.printStackTrace();
+//                }
+//
+//            }
+//
+//        }.execute();
+//
+//    }
+    public static final void printUsersTableInfo() {
         new H2DatabaseConnector(Info.Db.DB_MAIN_USERNAME, Info.Db.DB_MAIN_PASSWORD) {
 
             @Override
@@ -136,7 +174,6 @@ public class DbUtil {
 
     }
 
-
     public static final void createUsersTable() {//top db
         new H2DatabaseConnector(Info.Db.DB_MAIN_USERNAME, Info.Db.DB_MAIN_PASSWORD) {
 
@@ -192,11 +229,21 @@ public class DbUtil {
             public void execute() {
                 try {
                     //DOWNLOADED WILL BE ONLY UPDATED ON CHANGE OF STATE/APPLICATION EXIT.  / cant update every few bytes or EVERY BYTE.. unacceptable./alebo ak s anaplni buffer.. nevim
-                    getStatement().execute("CREATE TABLE downloads(id bigint auto_increment,"
+                    getStatement().execute(
+                            //CREATE TABLE DOWNLOADS
+                            "CREATE TABLE downloads(id bigint auto_increment,"
                             + "state INT NOT NULL,connections INT NOT NULL,name VARCHAR(255) NOT NULL,size LONG NOT NULL,"
                             + "source VARCHAR(1000) NOT NULL,added VARCHAR(255) NOT NULL,completedOn VARCHAR(255),downloadDir VARCHAR(255) NOT NULL);"
                             + "CREATE TABLE statistics(date DATE auto_increment,downloadedAmount LONG);"
-                    
+                            //CREATE TABLE DAILY STATS
+                            //BIGINT Mapped to java.lang.Long.
+                            + "  CREATE TABLE dailyStats("
+                            + "  ID BIGINT DEFAULT CAST(FORMATDATETIME(CURRENT_TIMESTAMP(), 'yyyyMMdd') AS BIGINT) PRIMARY KEY,"
+                            + "  downBytes LONG,numOfDownloads INT "
+                            + ");"
+                            + "ALTER TABLE dailyStats ALTER downBytes SET DEFAULT '0';ALTER TABLE dailyStats ALTER numOfDownloads SET DEFAULT '0'"//SKUSIM POTOM TAKTO KED HENTO NEBUDE FUNGOVAT/
+                    //TODO CHECK CI FUNGUJE HENT OSET DEFUALT ZA NOT NULL
+
                     );
                 } catch (SQLException ex) {
                     ex.printStackTrace();
@@ -204,6 +251,175 @@ public class DbUtil {
             }
 
         }.execute();
+    }
+
+    private static final int DB_INDEX_DS_IDDATE = 1;
+    private static final int DB_INDEX_DS_DOWNBYTES = 2;
+    private static final int DB_INDEX_DS_NUMOFDOWN = 3;
+
+    public static ArrayList<DailyStat> getDailyStats() {
+        return new H2DatabaseConnector(MainDataModel.getInstance().loginProfile) {
+
+            ArrayList<DailyStat> ret = new ArrayList<>();
+
+            @Override
+            public <T extends Iterable> T executeRetrieveIterable() {
+                try (PreparedStatement stmt = getConnection().prepareStatement("select * from dailyStats")) {
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        while (rs.next()) {
+                            DailyStat ds = new DailyStat(rs.getLong(DB_INDEX_DS_IDDATE), rs.getLong(DB_INDEX_DS_DOWNBYTES), rs.getInt(DB_INDEX_DS_NUMOFDOWN));//TODO change to  constants rather then names
+                            ret.add(ds);
+                            //System.out.println("DEBUG getDailyStats DailyStat: " + ds);
+                        }
+                    }
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+                closeConnection();
+                return (T) ret;
+            }
+
+        }.executeRetrieveIterable();
+    }
+
+    //format 'yyyyMMdd'
+    public static final void insertIntoDailyStats(long bytesDownloaded) {
+        new H2DatabaseConnector(MainDataModel.getInstance().loginProfile) {
+
+            @Override
+            public void execute() {
+
+                long id = DailyStat.createDateId(LocalDate.now());
+                System.out.println("DBUTIL INSERTINTO ID:" + id);
+                PreparedStatement stmt;
+                try {
+                    stmt = getConnection().prepareStatement("SELECT * FROM dailyStats WHERE ID=?;");//works
+                    try {
+                        stmt.setLong(DB_INDEX_DS_IDDATE, id);
+                        boolean contains;
+                        try (ResultSet rs = stmt.executeQuery()) {//check if contains id
+                            contains = rs.next();
+                        }
+                        if (contains) {
+                            stmt = getConnection().prepareStatement("UPDATE dailyStats SET downBytes=? WHERE ID=?");//does not work
+                            System.out.println("Contains");
+                            stmt.setLong(2, id);
+                            stmt.setLong(1, bytesDownloaded);
+
+                            // stmt.setLong(DB_INDEX_DS_IDDATE, id);
+                        } else {
+                            stmt = getConnection().prepareStatement("INSERT INTO dailyStats (ID,downBytes) VALUES (?,?);");//works
+                            System.out.println("Does not contain");
+                            stmt.setLong(DB_INDEX_DS_DOWNBYTES, bytesDownloaded);
+                            stmt.setLong(DB_INDEX_DS_IDDATE, id);
+                        }
+                        System.out.println("Writing value :" + bytesDownloaded);
+
+                        stmt.executeUpdate();
+
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
+                        Logger.getLogger(DbUtil.class.getName()).log(Level.SEVERE, null, ex);
+                    } finally {
+                        stmt.close();
+                    }
+
+                } catch (SQLException ex) {
+                    System.err.println("PROBLEM AT insertIntoDailyStats DbUtil,");
+                    ex.printStackTrace();
+                }
+            }
+
+        }.execute();
+    }
+
+    private static Object dbDsLock = new Object();
+
+    public static final void insertIntoDailyStats(DailyStat dailyStat) {
+        synchronized (dbDsLock) {
+            new H2DatabaseConnector(MainDataModel.getInstance().loginProfile) {
+
+                @Override
+                public void execute() {
+
+                    long id = dailyStat.getIdDate();
+
+                    PreparedStatement stmt;
+                    try {
+                        stmt = getConnection().prepareStatement("SELECT * FROM dailyStats WHERE ID=?;");//works
+                        try {
+                            stmt.setLong(DB_INDEX_DS_IDDATE, id);
+                            boolean contains;
+                            try (ResultSet rs = stmt.executeQuery()) {//check if contains id
+                                contains = rs.next();
+                            }
+                            if (contains) {
+                                stmt = getConnection().prepareStatement("UPDATE dailyStats SET downBytes=? WHERE ID=?");//does not work
+                                System.out.println("Contains");
+                                stmt.setLong(2, id);
+                                stmt.setLong(1, dailyStat.getBytesDownloaded());
+
+                                // stmt.setLong(DB_INDEX_DS_IDDATE, id);
+                            } else {
+                                stmt = getConnection().prepareStatement("INSERT INTO dailyStats (ID,downBytes) VALUES (?,?);");//works
+                                System.out.println("Does not contain");
+                                stmt.setLong(DB_INDEX_DS_DOWNBYTES, dailyStat.getBytesDownloaded());
+                                stmt.setLong(DB_INDEX_DS_IDDATE, id);
+                            }
+                            System.out.println("Writing value :" + dailyStat.getBytesDownloaded());
+
+                            stmt.executeUpdate();
+
+                        } catch (SQLException ex) {
+                            ex.printStackTrace();
+                            Logger.getLogger(DbUtil.class.getName()).log(Level.SEVERE, null, ex);
+                        } finally {
+                            stmt.close();
+                        }
+
+                    } catch (SQLException ex) {
+                        System.err.println("PROBLEM AT insertIntoDailyStats DbUtil,");
+                        ex.printStackTrace();
+                    }
+                }
+
+            }.execute();
+        }
+    }
+
+    public static final void insertIntoDailyStats(int numberOfDownloads) {
+
+    }
+
+    //gets bytes downloaded from all days//user already logged in 
+    public static long getTotalDownloadedBytes() {
+        return new H2DatabaseConnector(MainDataModel.getInstance().loginProfile) {
+
+            @Override
+            @SuppressWarnings("UnnecessaryBoxing")
+            public <T> T executeRetrieve() {
+                try (PreparedStatement stmt = getConnection().prepareStatement("SELECT SUM(downBytes) FROM dailyStats")) {
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        if (rs.next()) {
+                            Long val = (Long) rs.getLong(1);
+                            closeConnection();
+                            return ((T) val);
+                        }
+                    }
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+                closeConnection();
+                return (T) new Long(0);
+            }
+
+        }.executeRetrieve();
+    }
+
+    public static final void insertIntoDailyStats(long bytesDownloaded, int numberOfDownloads) {
+        insertIntoDailyStats(bytesDownloaded);
+        insertIntoDailyStats(numberOfDownloads);
+        //check what date is  and either update or add new row
     }
 
     //WILL HAVE TO USE PREPARED STATEMENTS
@@ -340,42 +556,44 @@ public class DbUtil {
     //overload load downloads
 
     public static void updateDownload(DownloadUnit du) {
-        new H2DatabaseConnector(MainDataModel.getInstance().loginProfile) {
+        synchronized (du) {//so noone can change it while writing into db
+            new H2DatabaseConnector(MainDataModel.getInstance().loginProfile) {
 
-            @Override
-            public void execute() {
-                try {
+                @Override
+                public void execute() {
+                    try {
 
-                    /*
-                     getStatement().execute("CREATE TABLE downloads(id bigint auto_increment,"
-                     + "state INT NOT NULL,connections INT NOT NULL,name VARCHAR(255) NOT NULL,size LONG NOT NULL,"
-                     + "source VARCHAR(1000) NOT NULL,added VARCHAR(255) NOT NULL,completedOn VARCHAR(255),downloadDir VARCHAR(255) NOT NULL);"
-                     + "CREATE TABLE offsets()");
-                     */
-                    System.out.println("Gonna update :" + du + "\n");
-                    prepStat = getConnection().prepareStatement("UPDATE downloads SET state=?,connections=?,name=?,size=?,source=?,added=?,completedOn=?,downloadDir=?"
-                            + "WHERE id=?;");
-                    prepStat.setInt(1, du.getState());
-                    prepStat.setInt(2, du.getNumberOfConnections());
-                    prepStat.setString(3, du.getName());
-                    prepStat.setLong(4, du.getSize());
-                    prepStat.setString(5, du.getSource());
-                    prepStat.setString(6, du.getAdded());
-                    prepStat.setString(7, du.getCompletedOn());
-                    prepStat.setString(8, du.getDirectory());
-                    prepStat.setLong(9, du.getId());
-                    prepStat.executeUpdate();
-                    resultSet = prepStat.getGeneratedKeys();
+                        /*
+                         getStatement().execute("CREATE TABLE downloads(id bigint auto_increment,"
+                         + "state INT NOT NULL,connections INT NOT NULL,name VARCHAR(255) NOT NULL,size LONG NOT NULL,"
+                         + "source VARCHAR(1000) NOT NULL,added VARCHAR(255) NOT NULL,completedOn VARCHAR(255),downloadDir VARCHAR(255) NOT NULL);"
+                         + "CREATE TABLE offsets()");
+                         */
+                        System.out.println("Gonna update :" + du + "\n");
+                        prepStat = getConnection().prepareStatement("UPDATE downloads SET state=?,connections=?,name=?,size=?,source=?,added=?,completedOn=?,downloadDir=?"
+                                + "WHERE id=?;");
+                        prepStat.setInt(1, du.getState());
+                        prepStat.setInt(2, du.getNumberOfConnections());
+                        prepStat.setString(3, du.getName());
+                        prepStat.setLong(4, du.getSize());
+                        prepStat.setString(5, du.getSource());
+                        prepStat.setString(6, du.getAdded());
+                        prepStat.setString(7, du.getCompletedOn());
+                        prepStat.setString(8, du.getDirectory());
+                        prepStat.setLong(9, du.getId());
+                        prepStat.executeUpdate();
+                        resultSet = prepStat.getGeneratedKeys();
 
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
+
+                    }
 
                 }
 
-            }
-
-        }.execute();
-        System.out.println("UPDATED ENTRY IN DATABASE");
+            }.execute();
+            System.out.println("UPDATED ENTRY IN DATABASE");
+        }
 
     }
 

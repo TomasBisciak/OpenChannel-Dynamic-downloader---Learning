@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import openchannel_dynamic_downloader.controllers.FxmlMainViewController;
 import openchannel_dynamic_downloader.downloader.DownloadTask;
 import openchannel_dynamic_downloader.downloader.Downloader;
 import openchannel_dynamic_downloader.model.MainDataModel;
@@ -79,11 +80,13 @@ public class OCKeyHook implements NativeKeyListener {
 
     @Override
     public void nativeKeyPressed(NativeKeyEvent nke) {
-
+        //latest key pressed
+        FxmlMainViewController.latestKeyPressed=nke.getKeyCode();
     }
 
     @Override
     public void nativeKeyReleased(NativeKeyEvent nke) {
+        //if clipboard doesnt include link fuck it dont even try
         if (nke.getKeyCode() == OC_NKE) {
             processEntry();
         }

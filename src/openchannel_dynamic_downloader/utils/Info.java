@@ -11,13 +11,11 @@ package openchannel_dynamic_downloader.utils;
  */
 public class Info {
 
-    public static final String APP_VERSION = "0.0.5";
-
+    public static final String APP_VERSION = "0.0.6";
     public static final int DEFAULT_APP_PORT = 50585;
     public static final String OC_DIR = System.getProperty("user.home") + "\\.OpenChannel\\";
     public static final String OC_DOWNLOADS_DIR = OC_DIR + "Downloads\\";
     public static final String OC_TEMP_DIR = OC_DIR + "Temp_Dont_Delete_Dont_Use\\";
-    // public static boolean isFtr=true;//Application first time run
 
     static {
 
@@ -37,12 +35,14 @@ public class Info {
         public static final String FXML_FILE_CHECKSUM = FXML_PREFIX + "FxmlCheckSumView.fxml";
         public static final String FXML_FILE_TUTORIAL = FXML_PREFIX + "FxmlTutorialView.fxml";
         public static final String FXML_FILE_CLOUD = FXML_PREFIX + "FxmlCloudView.fxml";
-        public static final String[] FXML_FILES = {FXML_FILE_MAIN, FXML_FILE_DOWNLOADS, FXML_FILE_SCHEDULER, FXML_FILE_LOGIN, FXML_FILE_DATABASE};
+        public static final String FXML_FILE_PREMIUM = FXML_PREFIX + "FxmlPremiumView.fxml";
+        public static final String FXML_FILE_AUTOMATED_DOWNLOAD = FXML_PREFIX + "FxmlAutomatedDownloadView.fxml";
+        public static final String[] FXML_FILES = {FXML_FILE_MAIN, FXML_FILE_DOWNLOADS, FXML_FILE_SCHEDULER, FXML_FILE_LOGIN, FXML_FILE_DATABASE, FXML_FILE_AUTOMATED_DOWNLOAD};
 
         public static final String OCPI = "/openchannel_dynamic_downloader/resources/images/OpenChannel_logo16x16.png";
-         public static final String OCPI16= "/openchannel_dynamic_downloader/resources/images/OpenChannel_logo16X16.png";
-          public static final String OCPI32 = "/openchannel_dynamic_downloader/resources/images/OpenChannel_logo32X32.png";
-           public static final String OCPI64= "/openchannel_dynamic_downloader/resources/images/OpenChannel_logo16X16.png";
+        public static final String OCPI16 = "/openchannel_dynamic_downloader/resources/images/OpenChannel_logo16X16.png";
+        public static final String OCPI32 = "/openchannel_dynamic_downloader/resources/images/OpenChannel_logo32X32.png";
+        public static final String OCPI64 = "/openchannel_dynamic_downloader/resources/images/OpenChannel_logo64X64.png";
         public static final String IMAGE_OC_TRANS = "/openchannel_dynamic_downloader/resources/images/openChanTrans.png";
 
     }
@@ -57,10 +57,13 @@ public class Info {
 
         public static final String PREF_APP_FIRST_TIME_RUN = "aftr";
 
-
         public static final String PREF_USER_FIRST_TIME_RUN = "uftr";
         public static final String PREF_USER_DOWNLOADS_DIR = "ddir";
-        public static final String PREF_USER_NUMOFCON_THREADS="noct";
+        public static final String PREF_USER_NUMOFCON_THREADS = "noct";
+        public static final String PREF_USER_TRAY_NOTIF_ENABLED = "tne";
+        public static final String PREF_USER_DAILY_STAT_DATEID = "dsdid";
+        public static final String PREF_USER_DAILY_STAT_DOWNBYTE = "dsdb";
+        public static final String PREF_USER_DAILY_STAT_NUMOFDOWN = "dsnod";
 
     }
 

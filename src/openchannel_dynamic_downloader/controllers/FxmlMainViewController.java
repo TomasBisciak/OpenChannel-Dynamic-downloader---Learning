@@ -17,6 +17,7 @@ import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -34,6 +35,7 @@ import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
@@ -51,7 +53,9 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Paint;
 import javafx.scene.web.WebEngine;
@@ -69,9 +73,14 @@ import openchannel_dynamic_downloader.downloader.Downloader;
 import openchannel_dynamic_downloader.model.MainDataModel;
 import openchannel_dynamic_downloader.scheduler.Scheduler;
 import openchannel_dynamic_downloader.security.UserProfile;
+import openchannel_dynamic_downloader.statistics.DailyStatTable;
 import openchannel_dynamic_downloader.utils.DbUtil;
 import openchannel_dynamic_downloader.utils.FileUtils;
 import openchannel_dynamic_downloader.utils.Info;
+import openchannel_dynamic_downloader.utils.MiscUtils;
+import org.controlsfx.control.HiddenSidesPane;
+import org.controlsfx.control.MaskerPane;
+import org.jnativehook.keyboard.NativeKeyEvent;
 
 /**
  *
@@ -100,9 +109,14 @@ public class FxmlMainViewController implements Initializable {
     private ToggleButton[] downloadsMenuBtns;
 
     @FXML
+    private BorderPane titledStatHolder;
+
+    @FXML
     private ToggleButton schedulerMenuBtn;
     @FXML
     private ToggleButton activateMenuBtn;
+    @FXML
+    private ToggleButton automatedToggleButton;
     @FXML
     private ToggleButton databaseToggleButton;
 
@@ -165,6 +179,16 @@ public class FxmlMainViewController implements Initializable {
     private Label progressPercentLbl;
     @FXML
     private Label avgSpeedLbl;
+    @FXML
+    private Label lblAllocMem;
+    @FXML
+    private Label lblSessionData;
+    @FXML
+    private Label lblTodayDown;
+    @FXML
+    private Label lblTotalDown;
+    @FXML
+    private HBox secondMenuHolder;
 
     private static CustomNotificationPane notifPane;
 
@@ -209,6 +233,7 @@ public class FxmlMainViewController implements Initializable {
             Scheduler.getInstance().setActive(newVal);
 
         });
+        activateMenuBtn.selectedProperty().setValue(Scheduler.getInstance().getActiveProperty().getValue());
 
         premiumBtn.selectedProperty().addListener((v, oldVal, newVal) -> {
 
@@ -252,6 +277,7 @@ public class FxmlMainViewController implements Initializable {
                             float diskSpace = FileUtils.getAllDiskSpace();
                             float usable = FileUtils.getAllUsableDiskSpace();
 
+                            //TODO MUST OPTIMIZE!.
                             if ((usable / 1024 / 1024 / 1024) >= 0.2 * (diskSpace / 1024 / 1024 / 1024)) {
                                 rbtnDiskSpace.setStyle("-fx-mark-color:green");
                                 rbtnDiskSpace.setText(String.format("Disk size:%.1fGB , Free space:%.1fGB ", diskSpace / 1024 / 1024 / 1024, usable / 1024 / 1024 / 1024));
@@ -266,6 +292,7 @@ public class FxmlMainViewController implements Initializable {
 
                             //check number of threads
                             infoPanelThreadCountLabel.setText("Threads:" + (Thread.activeCount()));
+                            lblAllocMem.setText("Allocated Memory " + (Runtime.getRuntime().totalMemory() / 1024) / 1024 + " MB");
 
                             //other actions
                         });
@@ -274,7 +301,7 @@ public class FxmlMainViewController implements Initializable {
                             rbtnDiskSpace.setSelected(true);
                         }
                         //refreshrate might drop it down a bit to 1 second maybe.
-                        Thread.sleep(3000);
+                        Thread.sleep(5000);
                     } catch (Exception ex) {
                         ex.printStackTrace();
                     }
@@ -293,7 +320,8 @@ public class FxmlMainViewController implements Initializable {
 
         autoCompleteTxtField = new CustomAutoCompleteSearchDownloadsTextField();
         autoCompleteTxtField.setPromptText("Search your downloads folder");
-        menuHolder.getChildren().add(0, autoCompleteTxtField);
+        secondMenuHolder.getChildren().add(0, autoCompleteTxtField);
+        autoCompleteTxtField.setStyle("-fx-background-radius:40;");
         mLog.setText("Logged as : " + MainDataModel.getInstance().loginProfile.getUsername());
 
         // updateSearchField(new String[]{"shit", "shizzle"});//TODO remove jsut test
@@ -417,13 +445,38 @@ public class FxmlMainViewController implements Initializable {
         appPortLbl.setText(
                 "Application port:" + OpenChannel_Dynamic_Downloader.getAppPort());
 
-        totalDownloadBar.progressProperty().bind(Downloader.totalDownValProperty());
+        totalDownloadBar.progressProperty().bind(MainDataModel.totalDownValProperty());
         totalDownloadBar.progressProperty().addListener((val, oldVal, newVal) -> {
             progressPercentLbl.setText(String.valueOf((double) newVal * 100) + "%");
         });
 
+        lblSessionData.textProperty().bind(MainDataModel.downloadedBytesSessionStringProperty());
+        lblTotalDown.textProperty().bind(MainDataModel.downloadedBytesTotalStringProperty());
+        lblTodayDown.textProperty().bind(MainDataModel.downloadedBytesTodayStringProperty());
+
         initStatistics();
 
+        // HIDDEN PANE CONTROL-------------------------------
+        BorderPane top = new BorderPane();
+        BorderPane bottom = new BorderPane();
+        BorderPane left = new BorderPane();
+        BorderPane right = new BorderPane();
+        Label thisIsTestLabel = new Label();
+        thisIsTestLabel.setText("HEY , SEE ME? COOL");
+        thisIsTestLabel.setStyle("-fx-background-color:GRAY");
+        right.setCenter(thisIsTestLabel);
+        HiddenSidesPane hiddenPane = new HiddenSidesPane(dynamicNode, top, right, bottom, left);
+        splitPaneMainView.getItems().set(0, hiddenPane);
+        // HIDDEN PANE CONTROL-------------------------------
+
+    }// END INITIALIZE
+    
+    
+    
+    
+
+    public ToggleButton getActivateSchedulerMenuBtn() {
+        return activateMenuBtn;
     }
 
     @FXML
@@ -442,7 +495,7 @@ public class FxmlMainViewController implements Initializable {
     // CHARTING DONE HERE------------------------
     //Might change access to data here etc .
     @FXML
-    private ChoiceBox choiceBoxResolution;
+    private HBox hBoxGraphHolderMenuRight;
 
     private final CategoryAxis xAxisBcs = new CategoryAxis();
     private final NumberAxis yAxisBcs = new NumberAxis();
@@ -451,10 +504,14 @@ public class FxmlMainViewController implements Initializable {
     //create series for each state so i can fuckn make them colored for fucks sake fuck this shit fuck
     private static final XYChart.Series stateSeries = new XYChart.Series();
 
-    private final static NumberAxis xAxis = new NumberAxis(1, 60, 1);
-    private final static NumberAxis yAxis = new NumberAxis(0, 1000, 100);
+    private final static NumberAxis xAxisDS = new NumberAxis(1, 60, 1);
+    private final static NumberAxis yAxisDS = new NumberAxis(0, 1000, 100);
     //  // XYChart.Series series = new XYChart.Series(data);
-    public static final AreaChart<Number, Number> speedChart = new AreaChart<>(xAxis, yAxis);
+    public static final AreaChart<Number, Number> speedChart = new AreaChart<>(xAxisDS, yAxisDS);
+
+    private final static NumberAxis xAxisDD = new NumberAxis(1, 60, 1);
+    private final static NumberAxis yAxisDD = new NumberAxis(0, 1000, 100);
+    public static final AreaChart<Number, Number> dataDownloadedChart = new AreaChart<>(xAxisDD, yAxisDD);
 
     private static final XYChart.Series speedSeriesSeconds = new XYChart.Series();//hold 60 units
     private static final XYChart.Series speedSeriesMinutes = new XYChart.Series();//hold 60 units
@@ -463,35 +520,14 @@ public class FxmlMainViewController implements Initializable {
     public static XYChart.Series getStateSeries() {
         return stateSeries;
     }
-    /*
-     //set colors for stateChart based on colorsi n octableview
-     for (Node n : stateChart.lookupAll(".default-color0.chart-bar")) {
-     n.setStyle("-fx-bar-fill:#e74c3c;");
-     }
-     for (Node n : stateChart.lookupAll(".default-color1.chart-bar")) {
-     n.setStyle("-fx-bar-fill: #7f8c8d;");
-     }
-     for (Node n : stateChart.lookupAll(".default-color2.chart-bar")) {
-     n.setStyle("-fx-bar-fill: #3498db;");
-     }
-     for (Node n : stateChart.lookupAll(".default-color3.chart-bar")) {
-     n.setStyle("-fx-bar-fill: #2ecc71;");
-     }
-     for (Node n : stateChart.lookupAll(".default-color4.chart-bar")) {
-     n.setStyle("-fx-bar-fill: #34495e;");
-     }
-     for (Node n : stateChart.lookupAll(".default-color5.chart-bar")) {
-     n.setStyle("-fx-bar-fill: #7f8c8d;");
-     }
-     */
 
     //  public static final String[] STATE_STRINGS = {"Failed", "Paused", "Downloading",
     //   "Completed", "Cancelled", "Scheduled"};
-   
-
-    public static void addToStateSeries(String state, int amount) {
+    public static void addToStateSeries(int index, int amount) {
         //based on state add to series
-        stateSeries.getData().add(new XYChart.Data(state, amount));
+        ((XYChart.Data) stateSeries.getData().get(index)).setYValue(amount);
+
+        // stateSeries.getData().add(new XYChart.Data(state, amount));
     }
 
     /**
@@ -584,24 +620,33 @@ public class FxmlMainViewController implements Initializable {
             activeResolution = 0;
         }
     }
+    private final ChoiceBox choiceBoxResolutionDS = new ChoiceBox();
+    private final ChoiceBox choiceBoxResolutionDD = new ChoiceBox();
+    private final Label resolutionLabel = new Label("Resolution");
+
+    private final DailyStatTable dailyStatTable = new DailyStatTable();
 
     private void initStatistics() {
         //set by defualt , speed of downlaoding and size of data downloaded at current time ,  shows daily downloaded data , 
         //has to be created table in database to store statistics about this
         //TODO create table in database to hodl statistics
+        hBoxGraphHolderMenuRight.setSpacing(5);
+        //hBoxGraphHolderMenuRight.getChildren().add(0, resolutionLabel);
+
         tgGraphButtonsGroup = new ToggleGroup();
         toggleBtnSpeed.setToggleGroup(tgGraphButtonsGroup);
         toggleButtonDownFreq.setToggleGroup(tgGraphButtonsGroup);
         toggleBtnDataDownloaded.setToggleGroup(tgGraphButtonsGroup);
         toggleButtonFileType.setToggleGroup(tgGraphButtonsGroup);
 
-        choiceBoxResolution.getItems().addAll("Seconds", "Minutes", "Hours");
-        choiceBoxResolution.getSelectionModel().selectFirst();
-        choiceBoxResolution.setVisible(false);
+        choiceBoxResolutionDS.getItems().addAll("Seconds", "Minutes", "Hours");
+        choiceBoxResolutionDS.getSelectionModel().selectFirst();
+        choiceBoxResolutionDD.getItems().addAll("Seconds", "Minutes", "Hours", "Days", "Weeks", "Months", "Years", "All time");
+        choiceBoxResolutionDD.getSelectionModel().selectFirst();
 
         ((NumberAxis) speedChart.getXAxis()).setUpperBound(60);//startin with seconds
 
-        choiceBoxResolution.getSelectionModel().selectedIndexProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
+        choiceBoxResolutionDS.getSelectionModel().selectedIndexProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
             switch ((int) newValue) {
                 case RESOLUTION_SECONDS: {
                     ((NumberAxis) speedChart.getXAxis()).setUpperBound(60);
@@ -629,10 +674,20 @@ public class FxmlMainViewController implements Initializable {
 
         toggleBtnSpeed.selectedProperty().addListener((val, oldVal, newVal) -> {
             if (newVal) {
-                choiceBoxResolution.setVisible(true);
+                hBoxGraphHolderMenuRight.getChildren().addAll(resolutionLabel, choiceBoxResolutionDS);
                 graphHolder.setCenter(speedChart);
             } else {
-                choiceBoxResolution.setVisible(false);
+                hBoxGraphHolderMenuRight.getChildren().removeAll(resolutionLabel, choiceBoxResolutionDS);
+                graphHolder.setCenter(null);
+            }
+        });
+
+        toggleBtnDataDownloaded.selectedProperty().addListener((val, oldVal, newVal) -> {
+            if (newVal) {
+                hBoxGraphHolderMenuRight.getChildren().addAll(resolutionLabel, choiceBoxResolutionDD);
+                graphHolder.setCenter(speedChart);
+            } else {
+                hBoxGraphHolderMenuRight.getChildren().removeAll(resolutionLabel, choiceBoxResolutionDD);
                 graphHolder.setCenter(null);
             }
         });
@@ -647,32 +702,100 @@ public class FxmlMainViewController implements Initializable {
 
         toggleButtonState.setSelected(true);
 
+        stateSeries.getData().add(new XYChart.Data("Failed", 0));
+        stateSeries.getData().add(new XYChart.Data("Paused", 0));
+        stateSeries.getData().add(new XYChart.Data("Downloading", 0));
+        stateSeries.getData().add(new XYChart.Data("Completed", 0));
+        stateSeries.getData().add(new XYChart.Data("Cancelled", 0));
+        stateSeries.getData().add(new XYChart.Data("Scheduled", 0));
 
+        stateChart.getStylesheets().add("openchannel_dynamic_downloader/css/style.css");
         stateChart.getData().add(stateSeries);
         stateChart.setAnimated(false);
+        stateChart.setLegendVisible(false);
         speedChart.getData().add(getSpeedSeriesSeconds());
         speedChart.setAnimated(false);
-        //initialize with this button selected by default
+        speedChart.setLegendVisible(false);
 
+        //initialize with this button selected by default
         toggleBtnSpeed.setSelected(true);
 
+        //TITLED PANE UPPER HOLDER INITIALIZATION
+        //add dailyStats loaded , from mainDataModel instance
+        dailyStatTable.setItems(MainDataModel.getInstance().getDailyStats());
+        titledStatHolder.setCenter(dailyStatTable);
+
+    }
+
+    @FXML
+    private Button btnDetect;
+    @FXML
+    private TextField txtFieldDetect;
+
+    public static int latestKeyPressed = Integer.MIN_VALUE;
+    //TODO JE TO DOJEBANE
+    @FXML
+    @SuppressWarnings("SleepWhileInLoop")
+    private void detect() {
+        new Thread(() -> {
+            while (latestKeyPressed == Integer.MIN_VALUE) {
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(FxmlMainViewController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                //Unknown keyCode: 0x-80000000
+                if (!NativeKeyEvent.getKeyText(latestKeyPressed).equals("Unknown keyCode: 0x-80000000")) {
+                    txtFieldDetect.setText(NativeKeyEvent.getKeyText(latestKeyPressed));
+
+                }
+
+                //set preferences
+                //
+            }
+            latestKeyPressed = Integer.MIN_VALUE;
+
+        }).start();
     }
 
     ///-----------------------------------------------------
     @FXML
+    private void confirmDownloadTestFile() {
+        new Thread(() -> {
+            try {
+                for (int i = 0; i < 100; i++) {
+                    
+                    Downloader.downloadFile(new URL("http://mirror.internode.on.net/pub/test/1meg.test"), "testFile" + i + ".test", dirTextField.getText(), 3, false, true);//returns boolean btw
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(FxmlMainViewController.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+                
+            } catch (MalformedURLException ex) {
+                Logger.getLogger(FxmlMainViewController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }).start();
+
+    }
+
+    @FXML
     private void confirmDownload() {
 
         if (downloadUrlFlag && dirFlag && nameFlag && connFlag) {
-            try {
-                Downloader.downloadFile(new URL(downFileTxtField.getText()), nameOfTextField.getText(), dirTextField.getText(), Integer.valueOf(numOfConTxtField.getText()), true, true);//returns boolean btw
-                //TODO notif
-                downloadUrlFlag = false;
-                downFileTxtField.setText("");
-                nameOfTextField.setText("");
-                nameFlag = false;
-            } catch (MalformedURLException ex) {
-                // ex.printStackTrace();
-            }
+            // ex.printStackTrace();
+         //   new Thread(() -> {
+                try {
+                    Downloader.downloadFile(new URL(downFileTxtField.getText()), nameOfTextField.getText(), dirTextField.getText(), Integer.valueOf(numOfConTxtField.getText()), true, true);//returns boolean btw
+                } catch (MalformedURLException ex) {
+                    Logger.getLogger(FxmlMainViewController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+         //   }).start();
+            downloadUrlFlag = false;
+            downFileTxtField.setText("");
+            nameOfTextField.setText("");
+            nameFlag = false;
         } else {
             System.out.println("DEBUG:BAD INPUT FOR DOWNLAOD FLAGS FALSE");
         }
@@ -738,8 +861,12 @@ public class FxmlMainViewController implements Initializable {
 
     @FXML
     private void setViewDatabase() {
-        //TODO fix
         setView(getView(Info.Resource.FXML_FILE_DATABASE));
+    }
+
+    @FXML
+    private void setViewAutomatedDownload() {
+        setView(getView(Info.Resource.FXML_FILE_AUTOMATED_DOWNLOAD));
     }
 
     @FXML
@@ -755,6 +882,11 @@ public class FxmlMainViewController implements Initializable {
     @FXML
     private void setViewCloud() {
         setView(getView(Info.Resource.FXML_FILE_CLOUD));
+    }
+
+    @FXML
+    private void setViewPremium() {
+        setView(getView(Info.Resource.FXML_FILE_PREMIUM));
     }
 
     @FXML

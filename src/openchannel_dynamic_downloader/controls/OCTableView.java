@@ -23,19 +23,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
-import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
-import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.ProgressBar;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TableCell;
@@ -44,21 +40,17 @@ import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.ProgressBarTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.util.Callback;
-import openchannel_dynamic_downloader.application.OpenChannel_Dynamic_Downloader;
 import openchannel_dynamic_downloader.controllers.FxmlChecksumViewController;
-import openchannel_dynamic_downloader.controllers.FxmlDownloadsViewController.DownloadsFilter;
-import openchannel_dynamic_downloader.controllers.FxmlMainViewController;
 import openchannel_dynamic_downloader.downloader.DownloadTask;
 import openchannel_dynamic_downloader.downloader.DownloadUnit;
 import openchannel_dynamic_downloader.downloader.Downloader;
-import openchannel_dynamic_downloader.utils.FileUtils;
+import openchannel_dynamic_downloader.utils.DbUtil;
 import openchannel_dynamic_downloader.utils.Info;
+import openchannel_dynamic_downloader.utils.MiscUtils;
 
 /**
  *
@@ -110,21 +102,30 @@ public class OCTableView extends TableView {
                         MenuItem cancel = new MenuItem("Cancel Download");
                         MenuItem redownload = new MenuItem("Re-download");
                         MenuItem generateMD5 = new MenuItem("Generate & Compare MD5");//TODO only allow on completed downloads
-                        MenuItem copyIntoClipboard = new MenuItem("Into clipboard");
+                        MenuItem copyIntoClipboard = new MenuItem("Copy info into clipboard");
 
+                        copyIntoClipboard.setOnAction((ActionEvent event) -> {
+                            infoCopyToClipboard();
+                        });
+
+                        cancel.setOnAction((ActionEvent event) -> {
+                            //getItems().removeAll(multipleSelection);//TODO CAHNGE ON SELECTED ROWS
+                            // getItems().remove(row.getItem());
+                            // multipleSelection.removeAll(multipleSelection);
+                            cancelDownload();
+                        });
                         start.setOnAction((ActionEvent event) -> {
                             //getItems().removeAll(multipleSelection);//TODO CAHNGE ON SELECTED ROWS
                             // getItems().remove(row.getItem());
                             // multipleSelection.removeAll(multipleSelection);
                             resumeDownloadOnEvent();
                         });
-                           forceStart.setOnAction((ActionEvent event) -> {
-                               //getItems().removeAll(multipleSelection);//TODO CAHNGE ON SELECTED ROWS
-                               // getItems().remove(row.getItem());
-                               // multipleSelection.removeAll(multipleSelection);
-                               resumeForcedDownloadOnEvent();
+                        forceStart.setOnAction((ActionEvent event) -> {
+                            //getItems().removeAll(multipleSelection);//TODO CAHNGE ON SELECTED ROWS
+                            // getItems().remove(row.getItem());
+                            // multipleSelection.removeAll(multipleSelection);
+                            resumeForcedDownloadOnEvent();
                         });
-
 
                         redownload.setOnAction((ActionEvent event) -> {
                             //getItems().removeAll(multipleSelection);//TODO CAHNGE ON SELECTED ROWS
@@ -166,7 +167,7 @@ public class OCTableView extends TableView {
                             pauseOnEvent();
                         });
                         rowMenu.getItems()
-                        .addAll(removeItem, removeAndDeleteData, new SeparatorMenuItem(), openDir, openFile, new SeparatorMenuItem(), copyURL, generateMD5, new SeparatorMenuItem(), start, pause, cancel, redownload);
+                        .addAll(removeItem, removeAndDeleteData, new SeparatorMenuItem(), openDir, openFile, new SeparatorMenuItem(), copyURL,copyIntoClipboard, generateMD5, new SeparatorMenuItem(), start, forceStart, pause, cancel, redownload);
 
                         // only display context menu for non-null items:
                         row.contextMenuProperty()
@@ -272,7 +273,7 @@ public class OCTableView extends TableView {
                                             break;
                                         }
                                         case DownloadUnit.STATE_CANCELLED: {
-                                            setText("Paused");
+                                            setText("Cancelled");
                                             setStyle("-fx-alignment:CENTER;-fx-background-color:#34495e;-fx-text-fill:WHITE");
                                             break;
                                         }
@@ -310,17 +311,10 @@ public class OCTableView extends TableView {
                                     setText(null);
                                     setStyle("");
                                 } else {
-                                    if (((((item / 1024) / 1024) / 1024) / 1024) >= 1) {
-                                        setText(((((item / 1024) / 1024) / 1024) / 1024) + " TB");
-                                    } else if ((((item / 1024) / 1024) / 1024) >= 1) {
-                                        setText((((item / 1024) / 1024) / 1024) + " GB");
-                                    } else if (((item / 1024) / 1024) >= 1) {
-                                        setText(((item / 1024) / 1024) + " MB");
-                                    } else if ((item / 1024) >= 1) {
-                                        setText((item / 1024) + " KB");
-                                    } else {
-                                        setText(item + " B");
-                                    }
+                                    //optimized
+                                    setText(MiscUtils.humanReadableByteCount(item));
+                                   
+
                                 }
                             }
 
@@ -348,22 +342,15 @@ public class OCTableView extends TableView {
                                     setText(null);
                                     setStyle("");
                                 } else {
-                                    if (((((item / 1024) / 1024) / 1024) / 1024) >= 1) {
-                                        setText(((((item / 1024) / 1024) / 1024) / 1024) + " TB");
-                                    } else if ((((item / 1024) / 1024) / 1024) >= 1) {
-                                        setText((((item / 1024) / 1024) / 1024) + " GB");
-                                    } else if (((item / 1024) / 1024) >= 1) {
-                                        setText(((item / 1024) / 1024) + " MB");
-                                    } else if ((item / 1024) >= 1) {
-                                        setText((item / 1024) + " KB");
-                                    } else {
-                                        setText(item + " B");
-                                    }
+                                    //optimized
+                                    setText(MiscUtils.humanReadableByteCount(item));
+
                                 }
                             }
 
                         };
                     }
+
                 }
         );
 
@@ -442,97 +429,98 @@ public class OCTableView extends TableView {
                 true);
     }
 
+    private final StringBuilder localSb = new StringBuilder();
+
+    public void infoCopyToClipboard() {
+        for (DownloadUnit du : multipleSelection) {
+            localSb.append(du.getId()).append(",").append(du.getState()).append(",").append(du.getName()).append(",").append(du.getSize())
+                    .append(",").append(du.getDownloaded()).append(",").append(du.getSource()).append(",").append(du.getNumberOfConnections())
+                    .append(",").append(du.getAdded()).append(",").append(du.getCompletedOn()).append("\n");
+        }
+        StringSelection selection = new StringSelection(localSb.toString());
+        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, selection);
+
+    }
+
+    //THAT TAKES CARE OF DOWNLAODS THAT ARE FINISHED , PARTIALLY  DOWNLAODED NOT . SINGLE CONNECITON OK SEGMENTED NOT
     public final void removeAndDeleteItemsOnEvent() {
-        removeItemsOnEvent();
-
-        multipleSelection.forEach((d) -> {
-            try {
-                Files.deleteIfExists(Paths.get(d.getDirectory() + d.getName()));
-            } catch (IOException ex) {
-                Logger.getLogger(OCTableView.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        });
-    }
-    public final void resumeForcedDownloadOnEvent(){
-         Platform.runLater(new Runnable() {
-
-            @Override
-            public void run() {
-                //TODO  TIME THIS EXECUTION WITH PARALLEL AND NORMAL STREAM WHILE UNDER DOWNLOAD LOAD OF MULTIPLE THREADS
-                //WORKS NOT BUD NOT SURE IF THIS IS THE MOST OPTIMIZED WAY OF DOINGTHINGS, BUT DOES  STOPS US FROM CREATING TASKS THAT ARE RUNNING IN THE BACKGROUND , instead they are created when needed.
-                ArrayList<DownloadUnit> temp = new ArrayList<>();
-                Downloader.getDownloads().parallelStream().filter((DownloadUnit du) -> multipleSelection.stream().
-                        filter((DownloadUnit d) -> d.getId() == du.getId()).count() > 0).forEach((DownloadUnit du) -> {
-                            try {
-                                // IN CASE OF STATE BEIGN SOMETHING ELSE THEN PAUSED !  dont execute ! //EXECUTES EVEN SCHEDULED DOWNLOAD WITH FORCE
-                                if (du.getState() == DownloadUnit.STATE_PAUSED||du.getState() == DownloadUnit.STATE_SCHEDULED) {// i dont care here for scheduler since  i cant resume scheduled download 
-                                    DownloadTask dtask = new DownloadTask(du.getName(), new URL(du.getSource()), du.getSize(), du.getDirectory(), du.getNumberOfConnections(), du.getId(), du.getState());
-                                    temp.add(du);//old pointer remove from downloads
-                                    Downloader.getDtCache().add(dtask);
-                                    Downloader.getDownloads().add(dtask);
-                                    Thread t=new Thread(dtask);
-                                    t.start();
-                                    dtask.resume();//only gonna be resumed if actually possible.
-                                    System.out.println("gonna resume dt:" + du.getId() + " state:" + du.getState());
-                                } else {
-                                    //TODO create notifications
-                                    System.out.println("notify user that this cannot be resumed state:" + du.getState() + " , id :" + du.getId());
-                                }
-
-                            } catch (MalformedURLException ex) {
-                                Logger.getLogger(OCTableView.class.getName()).log(Level.SEVERE, null, ex);
-                            } catch (IOException ex) {
-                                Logger.getLogger(OCTableView.class.getName()).log(Level.SEVERE, null, ex);
-                            } catch (DownloadTask.SizeNotDeterminedException | SQLException ex) {
-                                Logger.getLogger(OCTableView.class.getName()).log(Level.SEVERE, null, ex);
-                            }
-                        });
-                temp.forEach((du) -> {
-                    Downloader.getDownloads().remove(du);
+        new Thread(() -> {
+            //FIRST STOP /REMOVE FROM DB THE FUCKN DOWNLOAD THEN REMOVE
+            //Downloader.removeDownloads(multipleSelection);
+            DbUtil.removeDownloads(multipleSelection);
+            multipleSelection.forEach((d) -> {
+                d.cancel();
+                if (d.getState() == DownloadUnit.STATE_COMPLETED || d.getNumberOfConnections() == 1) {
+                    try {
+                        Files.deleteIfExists(Paths.get(d.getDirectory() + d.getName()));
+                    } catch (IOException ex) {
+                        Logger.getLogger(OCTableView.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                } else {
+                    try {
+                        //Files.deleteIfExists(Paths.get(d.getDirectory() + d.getName()));
+                        for (int i = 0; i < d.getNumberOfConnections(); i++) {
+                            Files.deleteIfExists(Paths.get(d.getDirectory() + d.getName() + DownloadUnit.FILENAME_PARTIAL + (i + 1)));
+                        }
+                    } catch (IOException ex) {
+                        Logger.getLogger(OCTableView.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+                Platform.runLater(() -> {
+                    Downloader.getDownloads().removeAll(multipleSelection);
                 });
-            }
-        });
+                Downloader.getDtCache().removeAll(multipleSelection);
+
+            });
+        }).start();
+
     }
-    public final void resumeDownloadOnEvent() {
+
+    public final void resumeForcedDownloadOnEvent() {
         // MAYBE CREATE FORCE START THAT WILL RESUME EVEN SCHEDULED  A DOWNLOADS
         //now takes care of situation where resume woud be called on DU instead of DT and creates DT from DU
-        Platform.runLater(new Runnable() {
-
-            @Override
-            public void run() {
-                //TODO  TIME THIS EXECUTION WITH PARALLEL AND NORMAL STREAM WHILE UNDER DOWNLOAD LOAD OF MULTIPLE THREADS
-                //WORKS NOT BUD NOT SURE IF THIS IS THE MOST OPTIMIZED WAY OF DOINGTHINGS, BUT DOES  STOPS US FROM CREATING TASKS THAT ARE RUNNING IN THE BACKGROUND , instead they are created when needed.
-                ArrayList<DownloadUnit> temp = new ArrayList<>();
-                Downloader.getDownloads().parallelStream().filter((DownloadUnit du) -> multipleSelection.stream().
-                        filter((DownloadUnit d) -> d.getId() == du.getId()).count() > 0).forEach((DownloadUnit du) -> {
-                            try {
-                                // IN CASE OF STATE BEIGN SOMETHING ELSE THEN PAUSED !  dont execute !
-                                if (du.getState() == DownloadUnit.STATE_PAUSED) {// i dont care here for scheduler since  i cant resume scheduled download 
-                                    DownloadTask dtask = new DownloadTask(du.getName(), new URL(du.getSource()), du.getSize(), du.getDirectory(), du.getNumberOfConnections(), du.getId(), du.getState());
-                                    temp.add(du);//old pointer remove from downloads
-                                    Downloader.getDtCache().add(dtask);
-                                    Downloader.getDownloads().add(dtask);
-                                    Thread t=new Thread(dtask);
-                                    t.start();
-                                    dtask.resume();//only gonna be resumed if actually possible.
-                                    System.out.println("gonna resume dt:" + du.getId() + " state:" + du.getState());
-                                } else {
-                                    //TODO create notifications
-                                    System.out.println("notify user that this cannot be resumed state:" + du.getState() + " , id :" + du.getId());
-                                }
-
-                            } catch (MalformedURLException ex) {
-                                Logger.getLogger(OCTableView.class.getName()).log(Level.SEVERE, null, ex);
-                            } catch (IOException ex) {
-                                Logger.getLogger(OCTableView.class.getName()).log(Level.SEVERE, null, ex);
-                            } catch (DownloadTask.SizeNotDeterminedException | SQLException ex) {
-                                Logger.getLogger(OCTableView.class.getName()).log(Level.SEVERE, null, ex);
+        Platform.runLater(() -> {
+            //TODO  TIME THIS EXECUTION WITH PARALLEL AND NORMAL STREAM WHILE UNDER DOWNLOAD LOAD OF MULTIPLE THREADS
+            //WORKS NOT BUD NOT SURE IF THIS IS THE MOST OPTIMIZED WAY OF DOINGTHINGS, BUT DOES  STOPS US FROM CREATING TASKS THAT ARE RUNNING IN THE BACKGROUND , instead they are created when needed.
+            ArrayList<DownloadUnit> temp = new ArrayList<>();//to remove old
+            ArrayList<DownloadTask> tempTask = new ArrayList<>();//to remove old
+            Downloader.getDownloads().parallelStream().filter((DownloadUnit du) -> multipleSelection.stream().
+                    filter((DownloadUnit d) -> d.getId() == du.getId()).count() > 0).forEach((DownloadUnit du) -> {
+                        try {
+                            // IN CASE OF STATE BEIGN SOMETHING ELSE THEN PAUSED !  dont execute !
+                            if (du.getState() == DownloadUnit.STATE_PAUSED || du.getState() == DownloadUnit.STATE_SCHEDULED) {// i dont care here for scheduler since  i cant resume scheduled download
+                                tempTask.add(new DownloadTask(du.getName(), new URL(du.getSource()), du.getSize(), du.getDirectory(), du.getNumberOfConnections(), du.getId(), du.getState()));
+                                temp.add(du);//old pointer remove from downloads
+                            } else {
+                                //TODO create notifications
+                                System.out.println("notify user that this cannot be resumed state:" + du.getState() + " , id :" + du.getId());
                             }
-                        });
-                temp.forEach((du) -> {
-                    Downloader.getDownloads().remove(du);
-                });
-            }
+
+                        } catch (MalformedURLException ex) {
+                            Logger.getLogger(OCTableView.class.getName()).log(Level.SEVERE, null, ex);
+                        } catch (IOException ex) {
+                            Logger.getLogger(OCTableView.class.getName()).log(Level.SEVERE, null, ex);
+                        } catch (DownloadTask.SizeNotDeterminedException | SQLException ex) {
+                            Logger.getLogger(OCTableView.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    });
+            System.out.println("Size of temp: " + temp.size());
+            //remove old
+            temp.forEach((du) -> {
+                System.out.println("REMOVING FROM OCTABLEVIEW");
+                Downloader.getDownloads().remove(du);
+
+            });
+            //add new
+            tempTask.forEach((dt) -> {
+                System.out.println("gonna resume dt:" + dt.getId() + " state:" + dt.getState());
+                Downloader.getDtCache().add(dt);
+                Downloader.getDownloads().add(dt);
+                Thread t = new Thread(dt);
+                t.start();
+                dt.resume();
+            });
+
         });
 
         /*
@@ -547,6 +535,80 @@ public class OCTableView extends TableView {
          du.setState(DownloadUnit.STATE_DOWNLOADING);
          });
          */
+    }
+
+    private void resumeDownloadOnEvent() {
+        // MAYBE CREATE FORCE START THAT WILL RESUME EVEN SCHEDULED  A DOWNLOADS
+        //now takes care of situation where resume woud be called on DU instead of DT and creates DT from DU
+        Platform.runLater(() -> {
+            //TODO  TIME THIS EXECUTION WITH PARALLEL AND NORMAL STREAM WHILE UNDER DOWNLOAD LOAD OF MULTIPLE THREADS
+            //WORKS NOT BUD NOT SURE IF THIS IS THE MOST OPTIMIZED WAY OF DOINGTHINGS, BUT DOES  STOPS US FROM CREATING TASKS THAT ARE RUNNING IN THE BACKGROUND , instead they are created when needed.
+            ArrayList<DownloadUnit> temp = new ArrayList<>();//to remove old
+            ArrayList<DownloadTask> tempTask = new ArrayList<>();//to remove old
+            Downloader.getDownloads().parallelStream().filter((DownloadUnit du) -> multipleSelection.stream().
+                    filter((DownloadUnit d) -> d.getId() == du.getId()).count() > 0).forEach((DownloadUnit du) -> {
+                        try {
+                            // IN CASE OF STATE BEIGN SOMETHING ELSE THEN PAUSED !  dont execute !
+                            if (du.getState() == DownloadUnit.STATE_PAUSED) {// i dont care here for scheduler since  i cant resume scheduled download
+                                tempTask.add(new DownloadTask(du.getName(), new URL(du.getSource()), du.getSize(), du.getDirectory(), du.getNumberOfConnections(), du.getId(), du.getState()));
+                                temp.add(du);//old pointer remove from downloads
+                            } else {
+                                //TODO create notifications
+                                System.out.println("notify user that this cannot be resumed state:" + du.getState() + " , id :" + du.getId());
+                            }
+
+                        } catch (MalformedURLException ex) {
+                            Logger.getLogger(OCTableView.class.getName()).log(Level.SEVERE, null, ex);
+                        } catch (IOException ex) {
+                            Logger.getLogger(OCTableView.class.getName()).log(Level.SEVERE, null, ex);
+                        } catch (DownloadTask.SizeNotDeterminedException | SQLException ex) {
+                            Logger.getLogger(OCTableView.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    });
+            System.out.println("Size of temp: " + temp.size());
+            //remove old
+            temp.forEach((du) -> {
+                System.out.println("REMOVING FROM OCTABLEVIEW");
+                Downloader.getDownloads().remove(du);
+
+            });
+            //add new
+            tempTask.forEach((dt) -> {
+                System.out.println("gonna resume dt:" + dt.getId() + " state:" + dt.getState());
+                Downloader.getDtCache().add(dt);
+                Downloader.getDownloads().add(dt);
+                Thread t = new Thread(dt);
+                t.start();
+                dt.resume();
+            });
+
+        });
+
+        /*
+         //slight revork above maybe
+         Downloader.getDtCache().parallelStream().filter((DownloadTask dt) -> multipleSelection.stream().
+         filter((DownloadUnit d) -> d.getId() == dt.getId()).count() > 0).forEach((DownloadTask dt) -> {
+         dt.resume();
+         System.out.println("gonna resume dt:" + dt.getId());
+         });
+         /*
+         multipleSelection.stream().forEach((DownloadUnit du) -> {
+         du.setState(DownloadUnit.STATE_DOWNLOADING);
+         });
+         */
+    }
+
+    //TODO move all ofthese methods that actually do something usefull liek remove download etc etc , to downloader and call the mfrom ehre with parameter of multipleselection !!!!!!!!!!!!!!!!!!!
+    public final void cancelDownload() {
+        new Thread(() -> {
+            multipleSelection.forEach((d) -> {
+                d.cancel(); //this must be tested
+            });
+            //remove existing
+            //remove data probably
+            //dont do anythign for now
+            //removeItemsOnEvent();
+        }).start();
     }
 
     public final void redownloadItems() {
@@ -648,7 +710,12 @@ public class OCTableView extends TableView {
 
         multipleSelection.stream().forEach((du) -> {
             try {
-                Runtime.getRuntime().exec("explorer.exe /select," + du.getDirectory() + "\\" + du.getName());
+                if (du.getNumberOfConnections() == 1 || du.getState() == DownloadUnit.STATE_COMPLETED) {
+                    Runtime.getRuntime().exec("explorer.exe /select," + du.getDirectory() + du.getName());
+                } else {
+                    Runtime.getRuntime().exec("explorer.exe /select," + du.getDirectory() + du.getName() + DownloadUnit.FILENAME_PARTIAL + 1);
+                }
+
                 //   new ProcessBuilder("explorer.exe", "/select," ).start();
                 System.out.println("NAME:" + du.getName() + "  direcotry:" + du.getDirectory());
                 // Runtime.getRuntime().exec("explorer.exe /select," + du.getDirectory() + "\\" + du.getName());//open in explorer and highlight it

@@ -21,6 +21,7 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import openchannel_dynamic_downloader.application.OpenChannel_Dynamic_Downloader;
+import openchannel_dynamic_downloader.model.MainDataModel;
 import openchannel_dynamic_downloader.security.UserProfile;
 import openchannel_dynamic_downloader.utils.Email;
 import openchannel_dynamic_downloader.utils.Info;
@@ -146,7 +147,8 @@ public class FxmlLoginViewController implements Initializable {
                 } else {
                     OpenChannel_Dynamic_Downloader.showMainView();
                 }
-
+                //TODO check if there is a case in which exception is thrown and will be needed to move this initialization into different part
+                MainDataModel.getInstance().initialize();
             } catch (Exception ex) {
                 ex.printStackTrace();
             }

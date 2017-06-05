@@ -6,7 +6,6 @@
 package openchannel_dynamic_downloader.downloader;
 
 import java.awt.TrayIcon;
-import java.io.File;
 import java.io.IOException;
 import java.net.CookieHandler;
 import java.net.CookieManager;
@@ -14,12 +13,12 @@ import java.net.CookiePolicy;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -30,14 +29,13 @@ import javafx.application.Platform;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import openchannel_dynamic_downloader.application.OpenChannel_Dynamic_Downloader;
-import openchannel_dynamic_downloader.controllers.FxmlDownloadsViewController;
 import openchannel_dynamic_downloader.model.MainDataModel;
 import openchannel_dynamic_downloader.utils.DbUtil;
-import openchannel_dynamic_downloader.utils.FileUtils;
-import org.apache.commons.validator.routines.UrlValidator;
+import openchannel_dynamic_downloader.utils.MiscUtils;
 
 /**
  * Aint no way to use proxy downloads running in parallel at this moment , no way to set multiple parallel authentificators , authentificated download woud have to be queued , proxy downloads without authentificator are possible.
@@ -45,10 +43,10 @@ import org.apache.commons.validator.routines.UrlValidator;
  * @author tomas
  */
 public class Downloader {
-
+    
     private static ExecutorService executor = Executors.newCachedThreadPool();//multithreaded all downlaod active s
     private static LinkedList<DownloadTask> queuedExec = new LinkedList<>();
-
+    
     private static DownloadValidator downValid = new DownloadValidator(new String[]{"http", "https", "ftp"}, true);
 
     // private static HashMap<DownloadUnit, Long> dSizeMap = new HashMap<>();//
@@ -56,37 +54,22 @@ public class Downloader {
      * Executor type: Parallel multiple downloads at the same time, all equal priority Queued one at the time Queued Parralel prioritized parallel donload with size limit or automaticly set
      */
     public static enum EXEC_TYPE {
-
+        
         EXEC_PARALLEL,
         EXEC_QUEUED,
         EXEC_PARALLEL_QUEUED
     }
     private static EXEC_TYPE executorType = EXEC_TYPE.EXEC_PARALLEL;
-
-    //private static String averageDownloadSpeed = "";
-    private static final SimpleStringProperty downloadSpeed = new SimpleStringProperty("");
-
-    public static SimpleStringProperty downloadSpeedProperty() {
-        return downloadSpeed;
-    }
-    private static final SimpleLongProperty downloadedBytesSession = new SimpleLongProperty(0);
-    private static final SimpleLongProperty downloadedBytesTotal = new SimpleLongProperty(0);
-    private static final SimpleDoubleProperty totalDownVal = new SimpleDoubleProperty(1);
-
-    public static SimpleDoubleProperty totalDownValProperty() {
-        return totalDownVal;
-    }
-
-    public static SimpleLongProperty downloadedBytesSessionProperty() {
-        return downloadedBytesSession;
-    }
-
-    public static SimpleLongProperty downloadedBytesTotalProperty() {
-        return downloadedBytesTotal;
-    }
-
+    
+    
+    
+    
+    
+    
+    
+    
     public static DownloaderDaemonThread ddt = new DownloaderDaemonThread();
-
+    
     public static void init() {
         /*
          downloadedProperty().addListener((val, oldVal, newVal) -> {
@@ -96,21 +79,18 @@ public class Downloader {
          // System.out.println("PROGRESS VALUE SET TO :"+((double)((long)newVal/getSize()))*100);
          });
          */
+        
         loadDownloads();
         ddt.start();
-
-    }
-
-    public static void incrementDownloadedBytesSession(long bytes) {
-        downloadedBytesSession.set(downloadedBytesSession.get() + bytes);
+        
     }
 
     //private static int dataLocSpaceLock[FileUtils.getNumOfDisk()];
     public static volatile boolean queued;//not sure if used
 
     //TODO   IMPORTANT!!
-    private static final List<DownloadTask> dtCache = new ArrayList<>();//cached DownloadTasks objects//active/paused etc actual tasks // 
-    private static ObservableList<DownloadUnit> downloads = FXCollections.observableArrayList();//cached DownloadUnits objects//ones that i watch in ocTableView
+    private static final List<DownloadTask> dtCache = Collections.synchronizedList(new ArrayList<DownloadTask>());//cached DownloadTasks objects//active/paused etc actual tasks // //must be thread safe
+    private static ObservableList<DownloadUnit> downloads = FXCollections.observableArrayList();//cached DownloadUnits objects//ones that i watch in ocTableView//this is thread safe
     //downloads moze vo view ukazovat aj dtasky aj dunity takze by som mal oboje situacie nad operaciami vo view osetrit.
 
     public static ObservableList<DownloadUnit> getDownloads() {
@@ -125,13 +105,13 @@ public class Downloader {
         long maxBytes = Runtime.getRuntime().maxMemory();
         System.out.println("DEBUG downloader - java : Max memory: " + maxBytes / 1024 / 1024 + "M");
         init();
-
+        
     }
-
+    
     private Downloader() {
-
+        
     }
-
+    
     public static List<DownloadTask> getDtCache() {
         return dtCache;
     }
@@ -140,40 +120,50 @@ public class Downloader {
      return downloads;
      }
      */
-
+    
     public static final void initCache() {//
 
     }
-
+    
     public static void setExecutorType(EXEC_TYPE execution_type) {
         //in case already downlaoding take care of switch
 
         switch (execution_type) {
             case EXEC_PARALLEL: {
-
+                
                 break;
             }
             case EXEC_QUEUED: {
-
+                
                 break;
             }
             case EXEC_PARALLEL_QUEUED: {
-
+                
                 break;
             }
             default: {
                 setExecutorType(EXEC_TYPE.EXEC_PARALLEL);
             }
         }
-
+        
         executorType = execution_type;
-
+        
     }
-
+    
     private static final StringBuilder localStringBuilder = new StringBuilder();
+    
+    
+    //MAYBE IMPLEMENT LATER BUDN OW , IDS are changing too often.
+    private static final HashSet<Long> uniqueDUIDs = new HashSet<>();
+    private static void addUnigueDUID(long uid) {
+        synchronized (uniqueDUIDs) {
+            uniqueDUIDs.add(uid);
+        }
+    }
 
     //used for addign new downlaods from ui
     public static boolean downloadFile(URL url, String fileName, String downloadDir, int numberOfConnections, boolean notification, boolean storeItself) {
+       
         System.out.println("Downloading file :" + fileName + " --- URL :" + url);
         localStringBuilder.append(fileName);
         if (localStringBuilder.toString() == null || localStringBuilder.toString().equals("")) {
@@ -182,22 +172,24 @@ public class Downloader {
             // fileName=generateFullName(url.toString());
         }
         try {
-
+            
             if (!(Files.list(Paths.get(downloadDir)).filter((f) -> f.getFileName().toString().equals(localStringBuilder.toString())).count() > 0)) {//disallow same names like already contained in current downlaod folder
                 System.out.println("ok you can do it.");
                 //TEST
                 DownloadTask dt = new DownloadTask(localStringBuilder.toString(), url, downloadDir, numberOfConnections, storeItself);
-
-                downloads.add(dt);
+                Platform.runLater(() -> {//in case its invoked from other then jfxat
+                    downloads.add(dt);
+                });
                 dtCache.add(dt);
                 // FxmlDownloadsViewController.addItemToOCTable(dt);
 
                 new Thread(dt).start();
-
+                
                 if (notification && OpenChannel_Dynamic_Downloader.getTray() != null) {
                     OpenChannel_Dynamic_Downloader.getTray().showMessage("Download info here started", TrayIcon.MessageType.INFO);
                 }
                 localStringBuilder.delete(0, localStringBuilder.length());
+                
                 return true;
             } else {
                 System.out.println("they are same");
@@ -257,12 +249,12 @@ public class Downloader {
         URL base, next;
         HttpURLConnection conn;
         String location = url;
-
+        
         while (true) {
             try {
                 //resourceUrl = new URL(url);
                 conn = (HttpURLConnection) new URL(location).openConnection();
-
+                
                 conn.setConnectTimeout(15000);
                 conn.setReadTimeout(15000);
                 conn.setInstanceFollowRedirects(false);   // Make the logic below easier to detect redirections
@@ -290,7 +282,7 @@ public class Downloader {
         System.out.println("Final url:" + url);
         return conn;
     }
-
+    
     public static final void removeDownload(DownloadUnit du) {
         //remove from database
         //stop the threads
@@ -300,9 +292,13 @@ public class Downloader {
         if (du instanceof DownloadTask) {//in case its active stop threads 
             ((DownloadTask) du).cancel();
         }
-
+        
     }
-
+    
+    public static void registerDownload() {
+        
+    }
+    
     public static final void removeDownloads(List<DownloadUnit> list) {// problem is that its still active.
         //remove from database
         //stop the threads
@@ -313,14 +309,16 @@ public class Downloader {
                 ((DownloadTask) d).cancel();
             }
         });
-
-        //STOP THEM befofer we delete them.
-        downloads.removeAll(list);
+        
+        Platform.runLater(() -> {
+            downloads.removeAll(list);
+        });
+        
         dtCache.removeAll(list);
         //FxmlDownloadsViewController.removeItemsFromOCTable(list);
 
     }
-
+    
     public static final void removeDownload(Long id) {
         //remove from database
         //stop the threads
@@ -343,7 +341,7 @@ public class Downloader {
     public static final int loadDownloads() {
         downloads = FXCollections.observableArrayList(DbUtil.loadDownloads());
         System.out.println("Loaded items:" + downloads.size());
-
+        
         List<DownloadUnit> activeDownloads = new ArrayList<>();
         //does not take INTO ACCOUNT SCHEDULED DOWNLOADS!!!!!!!!!!!!! no idea how they gonna work bud its gonna fix 
         //// IMPORTANT
@@ -399,20 +397,20 @@ public class Downloader {
         System.out.println("HOW MANY active downloading:" + dtCache.size());
         return downloads.size();
     }
-
+    
     private void download(DownloadTask download) {
-
+        
     }
-
+    
     public static final void createDownload() {//uses validator
 
     }
-
+    
     public static final boolean validateStringDownloadUrl(String url) {//has to be regex ..
-
+        
         return true;
     }
-
+    
     public static final String generateFullName(String url) {
         //only if valid url
         //regex check
@@ -421,7 +419,7 @@ public class Downloader {
                 + "_oc" + url.substring(url.lastIndexOf("."));//"_oc_"+MainDataModel.getInstance().getLatestId();
 
     }
-
+    
     public static final String getPostFix(String url, long id) {
         try {
             return "_" + id
@@ -431,7 +429,7 @@ public class Downloader {
             return null;
         }
     }
-
+    
     public static final String generateFileName(String url) {
         //only if valid url
         //regex check
@@ -441,5 +439,5 @@ public class Downloader {
                 + "_oc";//+url.substring(url.lastIndexOf("."));
 
     }
-
+    
 }

@@ -244,7 +244,7 @@ public class FxmlDatabaseViewController implements Initializable {
 
 
                     if (!dpcontroller.checkBoxes[1].isSelected()) {//reversed logic... too lazy
-                        this.statement.executeQuery(query);
+                        this.statement.executeUpdate(query);
                         getConnection().commit();
                     } else {
                         //EXECUTE and retrieve data into table

@@ -11,6 +11,7 @@ import java.nio.file.Paths;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.prefs.Preferences;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
@@ -26,7 +27,7 @@ import openchannel_dynamic_downloader.utils.Info;
  *
  * @author tomas
  */
-public class UserProfile {
+public final class UserProfile {
 
     /**
      * Default value for default connection
@@ -40,12 +41,16 @@ public class UserProfile {
      */
     private SimpleStringProperty downloadsDir;
     private SimpleIntegerProperty numOfConnectionsPerDownload;
-    // private SimpleStringProperty downloadsDir;
+    private SimpleBooleanProperty trayNotificationsEnabled;
 
+    // private SimpleStringProperty downloadsDir;
     public static final String PREP_STAT_INSERT_USER_PROF = "INSERT INTO userProfiles () VALUES (?,?,?)";
 
+    //some unconnected default values for preferences here
+    private static final boolean DEFAULT_TRAY_NOTIF_ENABLED = true;
+
     //stored under userprofile preferences dir
-    private Preferences preferences;
+    private final Preferences preferences;//set only once 
 
     //something to help insert itself into database
     public UserProfile() {//default user initialization
@@ -59,14 +64,20 @@ public class UserProfile {
         preferences = Preferences.userRoot().node("openchannel/users/" + username);//test if capslock will not mess up or '/' character
 
         downloadsDir = new SimpleStringProperty(preferences.get(Info.PreferenceData.PREF_USER_DOWNLOADS_DIR, Info.OC_DOWNLOADS_DIR + username + "\\"));
-        numOfConnectionsPerDownload = new SimpleIntegerProperty(preferences.getInt(Info.PreferenceData.PREF_USER_NUMOFCON_THREADS,DownloadTask.CONNECTIONS_DEF));
-
         downloadsDir.addListener((v, oldValue, newValue) -> {
             preferences.put(Info.PreferenceData.PREF_USER_DOWNLOADS_DIR, getDownloadsDir());
         });
+
+        numOfConnectionsPerDownload = new SimpleIntegerProperty(preferences.getInt(Info.PreferenceData.PREF_USER_NUMOFCON_THREADS, DownloadTask.CONNECTIONS_DEF));
         numOfConnectionsPerDownload.addListener((v, oldValue, newValue) -> {
             preferences.putInt(Info.PreferenceData.PREF_USER_NUMOFCON_THREADS, getNumOfConnectionsPerDownload());
         });
+
+        trayNotificationsEnabled = new SimpleBooleanProperty(preferences.getBoolean(Info.PreferenceData.PREF_USER_TRAY_NOTIF_ENABLED, DEFAULT_TRAY_NOTIF_ENABLED));
+        trayNotificationsEnabled.addListener((v, oldValue, newValue) -> {
+            preferences.putBoolean(Info.PreferenceData.PREF_USER_TRAY_NOTIF_ENABLED, getTrayNotificationsEnabled());
+        });
+        
         loadAllPreferences();
     }
 
@@ -74,14 +85,14 @@ public class UserProfile {
         setUsername(username);
         //downloadsDir=new SimpleStringProperty(Info.OC_DOWNLOADS_DIR+getUsername()+"\\");  //todo remove
         setPassword(password);
-        preferences = Preferences.userRoot().node("openchannel/users/" + username);//test if capslock will not mess up or '/' character
+        preferences = Preferences.userRoot().node("openchannel/users/" + username);//test if capslock will not mess up or '/' character//will
 
         downloadsDir = new SimpleStringProperty(preferences.get(Info.PreferenceData.PREF_USER_DOWNLOADS_DIR, Info.OC_DOWNLOADS_DIR + username + "\\"));
         downloadsDir.addListener((v, oldValue, newValue) -> {
             preferences.put(Info.PreferenceData.PREF_USER_DOWNLOADS_DIR, getDownloadsDir());
             System.out.println("DEBUG:putting in preference data for downloads dir on userprofile");
         });
-      //  numOfConnectionsPerDownload
+        //  numOfConnectionsPerDownload
 
         loadAllPreferences();
     }
@@ -201,10 +212,7 @@ public class UserProfile {
             }
 
         }.executeRetrieve();
-        if (pswrd != null && pswrd.equals(getPassword())) {
-            return true;
-        }
-        return false;
+        return pswrd != null && pswrd.equals(getPassword());
     }
 
     public static final boolean validatePasswordString(String password) {
@@ -247,12 +255,24 @@ public class UserProfile {
         downloadsDir.set(url);
     }
 
-    public void setNumOfConnectionsPerDownload(int value){
+    public void setNumOfConnectionsPerDownload(int value) {
         numOfConnectionsPerDownload.set(value);
     }
-    
+
     public int getNumOfConnectionsPerDownload() {
         return numOfConnectionsPerDownload.get();
+    }
+
+    public SimpleBooleanProperty getTrayNotificationsEnabledProperty() {
+        return trayNotificationsEnabled;
+    }
+
+    public void setTrayNotificationsEnabled(boolean b) {
+        trayNotificationsEnabled.set(b);
+    }
+
+    public boolean getTrayNotificationsEnabled() {
+        return trayNotificationsEnabled.get();
     }
 
 }

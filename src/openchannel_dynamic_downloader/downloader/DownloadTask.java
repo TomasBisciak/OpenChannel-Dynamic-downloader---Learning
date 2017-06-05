@@ -48,53 +48,21 @@ import sun.plugin2.util.SystemUtil;
  * @author tomas
  */
 public class DownloadTask extends DownloadUnit implements Runnable {//can return itself from executor 
-//TODO must suport segmented file transfer
 
-    /*
-     public static final String FILENAME_PARTIAL = ".oc_partial.part";
-
-     private final Object lock = new Object();
-
-     private SimpleLongProperty id;
-     private SimpleStringProperty name;//can be set//file is upon completion
-     private SimpleStringProperty source;
-     private String directory;
-     private SimpleLongProperty size;//STORED IN BYTES/ REPRESENTED IN STRING AT TABLE
-
-     private SimpleStringProperty eta;//based on download speed and size
-     private SimpleDoubleProperty progress = new SimpleDoubleProperty(0.5);
-     ;//not sure if necessery since it can be calculated from size and downloaded
-     private SimpleLongProperty downloaded;//STORED IN BYTES/ REPRESENTED IN STRING AT TABLE
-     private SimpleDoubleProperty downloadSpeed = new SimpleDoubleProperty(0);
-     private SimpleStringProperty added;//calculates at runtime by application //stores at start in db
-     private SimpleStringProperty completedOn;////calculates at runtime by application //stores at completion to db
-
-     public static final String[] STATE_STRINGS = {"Failed", "Paused", "Downloading",
-     "Completed", "Cancelled"};
-
-     public static final int STATE_FAILED = -1;
-     public static final int STATE_PAUSED = 0;
-     public static final int STATE_DOWNLOADING = 1;//means downloading
-     public static final int STATE_COMPLETED = 2;
-     public static final int STATE_CANCELLED = 3;
-     public static final int STATE_SCHEDULED = 4;
-
-     private volatile SimpleIntegerProperty state = new SimpleIntegerProperty(STATE_DOWNLOADING);
-     */
     private boolean active = false;
-    private boolean shoudIKillMyself = false;//! och please no no! no!
+    private boolean shoudIKillMyself = false;
 
-    //public static final int CONNECTIONS_DEF = 3;
-    // private String downloadDir;//not sure if used
+
     private static final double SMOOTHING_FACTOR = 0.002;//might lower down
+    private static final int STAY_ALIVE_TIMEOUT = 60;//seconds
     private double averageSpeed = 0;
     /*
      * based on blogpost by oracle , might be calculated later based on number of threads active and size of the download
      */
     public static final int BUFFER_SIZE = 8192;
-    //private SimpleIntegerProperty numOfConnections = new SimpleIntegerProperty(CONNECTIONS_DEF);
+  
     private boolean[] threadFinishFlags;
-    private final ArrayList<DownloadThread> downloadThreadList = new ArrayList<>();
+    private ArrayList<DownloadThread> downloadThreadList = new ArrayList<>();
 
     /*//probably not needed since i can somewhow read file while its beign written to
      public static int PLAYBACK_BUFFER_SIZE=5000000;
@@ -102,6 +70,9 @@ public class DownloadTask extends DownloadUnit implements Runnable {//can return
      */
     private long partSize;
     private long[] partStartOffset;
+
+    private long bytesReadOldValue = 0;
+    private long bytesReadNewValue = 0;
 
     /**
      * Just helper exception to provide notification for either debug or something
@@ -118,35 +89,33 @@ public class DownloadTask extends DownloadUnit implements Runnable {//can return
     }
 
     public DownloadTask(String fileName, URL source, String directory, int numberOfConnections, boolean storeItself) throws IOException, SizeNotDeterminedException, SQLException {
-        //name = new SimpleStringProperty(fileName);
         setNameProperty(new SimpleStringProperty(fileName));
-        //this.source = new SimpleStringProperty(source.toString());
         setSourceProperty(new SimpleStringProperty(source.toString()));
-        //this.directory=directory;
         setDirectory(directory);
-        //numOfConnections.set(numberOfConnections);
         setNumberOfConnections(numberOfConnections);
         threadFinishFlags = new boolean[numberOfConnections];
         partStartOffset = new long[numberOfConnections];
-        //size = new SimpleLongProperty(getSizeOf(source));
 
         ///TESTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
         //setSizeProperty(new SimpleLongProperty(getSizeOf(source)));
-        setSizeProperty(new SimpleLongProperty());
+        setSizeProperty(new SimpleLongProperty(0));
         ///TESTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 
-        //downloaded = new SimpleLongProperty(readDownloadedByteSize());//how much is downlaoded? check size of the file that corresponds to this downloadUnit
         setDownloadedProperty(new SimpleLongProperty(readDownloadedByteSize()));
 
-        //progress.bind(downloaded.divide(size).divide(100));
-        //eta = new SimpleStringProperty();
         setEtaProperty(new SimpleStringProperty());
 
         downloadSpeedProperty().addListener((val, oldVal, newVal) -> {//might be super ineffective to compute it nonstop like this.
             //TODO check opt
             //compiler will optimize for me// or optimize later..
             averageSpeed = SMOOTHING_FACTOR * oldVal.longValue() + (1 - SMOOTHING_FACTOR) * averageSpeed;
-            long totalSeconds = ((getSize() - getDownloaded()) / 1024) / (long) averageSpeed;//in kb/s
+            long totalSeconds=0;
+            try{
+                  totalSeconds = ((getSize() - getDownloaded()) / 1024) / (long) averageSpeed;//in kb/s
+            }catch(Exception e){
+                //e.printStackTrace();
+            }
+           
             long hours = totalSeconds / 3600;
             long minutes = (totalSeconds % 3600) / 60;
             long seconds = totalSeconds % 60;
@@ -161,9 +130,7 @@ public class DownloadTask extends DownloadUnit implements Runnable {//can return
             // System.out.println("PROGRESS VALUE SET TO :"+((double)((long)newVal/getSize()))*100);
         });
 
-        // added = new SimpleStringProperty(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
         setAddedProperty(new SimpleStringProperty(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)));
-        //completedOn = new SimpleStringProperty("Not completed");
         setCompletedOnProperty(new SimpleStringProperty("Not completed"));
 
         if (storeItself) {
@@ -173,7 +140,6 @@ public class DownloadTask extends DownloadUnit implements Runnable {//can return
             if (i < 0) {
                 throw new SQLException();
             }
-            //id = new SimpleLongProperty(i);//shoud be safe, im sure, almost.
             setIdProperty(new SimpleLongProperty(i));
 
             System.out.println("DEBUG: id for downloadTask:" + getId());
@@ -198,7 +164,7 @@ public class DownloadTask extends DownloadUnit implements Runnable {//can return
 
         ///TESTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
         //setSizeProperty(new SimpleLongProperty(getSizeOf(source)));
-        setSizeProperty(new SimpleLongProperty());
+        setSizeProperty(new SimpleLongProperty(0));
         ///TESTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 
         /*
@@ -211,7 +177,6 @@ public class DownloadTask extends DownloadUnit implements Runnable {//can return
          */
         setDownloadedProperty(new SimpleLongProperty(readDownloadedByteSize()));
 
-        //progress.bind(downloaded.divide(size).divide(100));
         setEtaProperty(new SimpleStringProperty());
 
         downloadSpeedProperty().addListener((val, oldVal, newVal) -> {//might be super ineffective to compute it nonstop like this.
@@ -302,7 +267,9 @@ public class DownloadTask extends DownloadUnit implements Runnable {//can return
             //all the writing etc done here
             setSize(getSizeOf(new URL(getSource())));
         } catch (SizeNotDeterminedException | IOException ex) {
+            error();
             Logger.getLogger(DownloadTask.class.getName()).log(Level.SEVERE, null, ex);
+            return;
         }
 
         if (isDiskSpace(getDownloaded())) {
@@ -334,21 +301,26 @@ public class DownloadTask extends DownloadUnit implements Runnable {//can return
                 setProgress(1.0);
                 completedOnProperty().set(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
                 //  downloadSpeed.set(((getDownloaded() - oldDownSize) * 1024) * 2);
-                System.out.println("DOWNLOADED IN BYTES :" + getDownloaded());
-                System.out.println("PROGRESS :" + getProgress());
-                System.out.println("KB/S :" + getDownloadSpeed());
-                System.out.println("ETA:" + getETA());
+                // System.out.println("DOWNLOADED IN BYTES :" + getDownloaded());
+                // System.out.println("PROGRESS :" + getProgress());
+                //  System.out.println("KB/S :" + getDownloadSpeed());
+                //  System.out.println("ETA:" + getETA());
 
                 System.out.println("Is downloaded returned true");
                 if (getNumberOfConnections() > 1) {
                     System.out.println("FINALIZING");
                     finalizeDownload();
                 }
-                setState(STATE_COMPLETED);
-                //TODO notify and store into db.
-                if (OpenChannel_Dynamic_Downloader.getTray() != null) {//todo att another flag checks from preferences
-                    OpenChannel_Dynamic_Downloader.getTray().showMessage("Download info here completed", TrayIcon.MessageType.INFO);
+                //TODO store download to cloudsync if contains prefix.
+                if (false) {
+
                 }
+                setState(STATE_COMPLETED);
+
+                //TODO notify and store into db.
+              //  if (OpenChannel_Dynamic_Downloader.getTray() != null) {//todo att another flag checks from preferences
+              //      OpenChannel_Dynamic_Downloader.getTray().showMessage("Download info here completed", TrayIcon.MessageType.INFO);
+              //  }
                 // DO AL LTHE FINISHING WORK HERE //////////////////////
                 break;
             }
@@ -361,7 +333,8 @@ public class DownloadTask extends DownloadUnit implements Runnable {//can return
                 }
 
                 //if is inactive this doesnt have to be done? no idea.
-                if (getState() != DownloadUnit.STATE_PAUSED) {//TODO fix this, has to take care of multiple situations not just paused, and what if paused is saved in database and i start program in paused state?
+                //was before !=DownloadUnit.STATE_PAUSED
+                if (getState() == DownloadUnit.STATE_DOWNLOADING) {//TODO fix this, has to take care of multiple situations not just paused, and what if paused is saved in database and i start program in paused state?
                     setDownloaded(readDownloadedByteSize());//get num of bytes
                     setProgress(getPercentage() / 100);
                     tempTime = System.currentTimeMillis();
@@ -369,41 +342,27 @@ public class DownloadTask extends DownloadUnit implements Runnable {//can return
                 }
 
                 Thread.sleep(1000);
+                //update number of bytes read per this task//session data count
+
+                incrementSessionData();
+
                 //  downloadSpeed.set(((getDownloaded() - oldDownSize) * 1024) * 2);
                 //just info
-                System.out.println("DOWNLOADED IN BYTES :" + getDownloaded());
-                System.out.println("PROGRESS :" + getProgress());
-                System.out.println("KB/S :" + getDownloadSpeed());
-                System.out.println("ETA:" + getETA());
-                System.out.println((System.currentTimeMillis() - tempTime) + " -THREAD ITERATION TASK");
-
+                // System.out.println("DOWNLOADED IN BYTES :" + getDownloaded());
+                //  System.out.println("PROGRESS :" + getProgress());
+                //  System.out.println("KB/S :" + getDownloadSpeed());
+                //   System.out.println("ETA:" + getETA());
+                //   System.out.println((System.currentTimeMillis() - tempTime) + " -THREAD ITERATION TASK");
                 //TODO CREATE IMPLEMENTATION OF RESUME 
+              //  System.out.println("IS ACTIVE THIS TASK??:" + active + " --------HIS STATE IS :" + getState());
                 if (!active) {
                     if (getState() == DownloadUnit.STATE_DOWNLOADING) {
+             //           System.out.println("RE ACTIVATING THE THREADS");
                         createDThreads();
                         startDownloadThreads();
+                        active = true;
                     }
                 }
-
-                //maybe i coud do this simpleer
-                /*
-                 if (!active) {//in case was paused or inactive bud download task was still running and created  now iteration will have to create download threads
-
-                 if (getState() == STATE_DOWNLOADING) {//not active and! is state set to downloading now, AND! is space on the disk  create download threads
-                 if (isDiskSpace(getDownloaded())) {
-                 System.out.println("--DEBUG creating download threads");
-                 createdDThreads();
-                 } else {
-                 error();
-                 return;
-                 }
-                 active = true;
-                 }
-
-                 } else {
-
-                 }
-                 */
             } catch (InterruptedException ex) {
                 Logger.getLogger(DownloadTask.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -416,6 +375,16 @@ public class DownloadTask extends DownloadUnit implements Runnable {//can return
 
     }
 
+    private void incrementSessionData() {
+        getDownloadThreadList().forEach((dthread) -> {
+            bytesReadNewValue += dthread.getBytesReadWhileActive();
+        });
+        MainDataModel.incrementDownBytesStat(bytesReadNewValue - bytesReadOldValue);
+
+        bytesReadOldValue = bytesReadNewValue;
+        bytesReadNewValue = 0;
+    }
+
     private boolean isDownloaded() {
 
         for (DownloadThread dt : getDownloadThreadList()) {
@@ -426,9 +395,23 @@ public class DownloadTask extends DownloadUnit implements Runnable {//can return
         return true;
     }
 
+    //delete whatever threads were there previously
+    private void removeDThreads() {
+        if (!active) {
+            for (DownloadThread dt : downloadThreadList) {
+                downloadThreadList.remove(dt);
+            }
+        } else {
+            System.out.println("Cant remove dThreads since this dtask is still active");
+        }
+
+    }
+
     private void createDThreads() {
         //calcualte optimal number of connections based on size ... maybe add as a feature later
         //partial download
+        //removeDThreads();
+        downloadThreadList = new ArrayList<>();
         if (numOfConnectionsProperty().get() == 1) {
 
             partStartOffset[0] = 0;
@@ -464,6 +447,9 @@ public class DownloadTask extends DownloadUnit implements Runnable {//can return
             }
 
         }
+        //JSUT CREATED THEM so no matter what they are not started,starter method has to know this !
+        dThreadsStarted = false;
+        System.out.println("DEBUG THREADS CREATED");
 
     }
 
@@ -576,10 +562,7 @@ public class DownloadTask extends DownloadUnit implements Runnable {//can return
         return true;
     }
 
-    public String generateMD5checksum() {//put checksupms into the folder dedicated to it , after each download/if set in preferences
-        //todo implement
-        return "";
-    }
+    
 
     /**
      *
@@ -599,7 +582,7 @@ public class DownloadTask extends DownloadUnit implements Runnable {//can return
     public void resume() {
         if (getState() == STATE_PAUSED || getState() == STATE_SCHEDULED) {
             System.out.println("Resuming, starting downlaod");
-            active = true;
+            //active = true;
             setState(STATE_DOWNLOADING);
             //create download threads
         }
@@ -608,15 +591,10 @@ public class DownloadTask extends DownloadUnit implements Runnable {//can return
 
     public void pause() {//pause thread
         if (getState() == STATE_DOWNLOADING || getState() == STATE_SCHEDULED) {
-            getDownloadThreadList().forEach((t) -> {
-                t.killed = true;
-            });
-            active = false;
+            stopDownloadThreads();
             //TODO not sure if shodu i kill myself or not here . :D.
             setState(STATE_PAUSED);
             //doesnt have to get  pause for some reason probably some thread updates faster then this block  executes
-            downloadSpeedProperty().set(0);
-            etaProperty().set("");
         }
     }
 
@@ -629,28 +607,29 @@ public class DownloadTask extends DownloadUnit implements Runnable {//can return
 
     public void stopDownloadThreads() {// wihtout setting a state
         getDownloadThreadList().forEach((t) -> {
-            t.killed = true;
+            t.setKilled(true);
         });
         active = false;
         downloadSpeedProperty().set(0);
         etaProperty().set("");
     }
 
+    @Override
     public void cancel() {//remove and notify, also stop thread
+        System.out.println("Cancelling task - from DownloadTask class");
         if (getState() == STATE_DOWNLOADING || getState() == STATE_PAUSED || getState() == STATE_SCHEDULED) {
-            getDownloadThreadList().forEach((t) -> {
-                t.killed = true;
-            });
+            setState(STATE_CANCELLED);
+            stopDownloadThreads();
         }
         shoudIKillMyself = true;
-        active = false;
-        setState(STATE_CANCELLED);
-        downloadSpeedProperty().set(0);
-        etaProperty().set("");
+        // active = false;
+
     }
 
     public final void error() {//end thread, notify user
         setState(STATE_FAILED);
+        stopDownloadThreads();
+        shoudIKillMyself = true;
     }
 
     /**

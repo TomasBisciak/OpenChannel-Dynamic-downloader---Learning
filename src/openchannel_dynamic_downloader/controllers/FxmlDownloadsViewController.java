@@ -26,6 +26,7 @@ import openchannel_dynamic_downloader.controls.CustomAutoCompleteSearchTableText
 import openchannel_dynamic_downloader.controls.OCTableView;
 import openchannel_dynamic_downloader.downloader.DownloadUnit;
 import openchannel_dynamic_downloader.downloader.Downloader;
+import openchannel_dynamic_downloader.model.MainDataModel;
 
 /**
  *
@@ -74,7 +75,7 @@ public class FxmlDownloadsViewController implements Initializable {
         ocTableView = new OCTableView();
         holder.setCenter(ocTableView);
 
-        btnDownloadSpeed.textProperty().bind(Downloader.downloadSpeedProperty());
+        btnDownloadSpeed.textProperty().bind(MainDataModel.downloadSpeedProperty());
 
         autoCompleteTxtField = new CustomAutoCompleteSearchTableTextField();
         autoCompleteTxtField.setPromptText("Filter table");
@@ -543,7 +544,7 @@ public class FxmlDownloadsViewController implements Initializable {
      * @param downloadUnitCache the downloadUnitCache to set
      */
     public void setDownloadUnitViewCache(ObservableList<DownloadUnit> downloadUnitCache) {
-        this.downloadUnitViewCache = downloadUnitCache;
+        FxmlDownloadsViewController.downloadUnitViewCache = downloadUnitCache;
     }
 
 }
